@@ -41,7 +41,7 @@ export default function RiskOverview() {
       {/* Node Vulnerability Table */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-          <h4 className="text-sm font-bold text-slate-900">Tier-by-Tier Risk Scoring (Sample Data)</h4>
+          <h4 className="text-sm font-bold text-slate-900">Tier-by-Tier Risk Scoring</h4>
           <span className="text-xs text-slate-400">Baseline Static Evaluation</span>
         </div>
 

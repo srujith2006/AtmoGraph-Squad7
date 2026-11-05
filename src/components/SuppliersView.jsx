@@ -9,7 +9,7 @@ export default function SuppliersView() {
         <div>
           <h3 className="text-base font-bold text-slate-900">Supplier & Node Directory</h3>
           <p className="text-xs text-slate-500">
-            Registered nodes across Tier 1, Tier 2, and internal manufacturing facilities (Sample Mock Data)
+            Registered nodes across Tier 1, Tier 2, and internal manufacturing facilities
           </p>
         </div>
         <div className="flex items-center space-x-2">

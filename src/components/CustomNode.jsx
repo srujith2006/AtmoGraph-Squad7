@@ -9,104 +9,79 @@ import {
   Users,
   MapPin,
   Clock,
-  ShieldCheck,
-  AlertTriangle,
-  ArrowRight,
 } from 'lucide-react';
-import { nodeCategoryConfig } from '../data/supplyChainData';
 
-const iconMap = {
-  Boxes,
-  Cpu,
-  Factory,
-  Truck,
-  Store,
-  Users,
+const icons = {
+  raw_material: Boxes,
+  component: Cpu,
+  assembly: Factory,
+  distribution: Truck,
+  retail: Store,
+  customer: Users,
+};
+
+const categoryColors = {
+  raw_material: { bar: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700' },
+  component: { bar: 'bg-sky-500', badge: 'bg-sky-50 text-sky-700' },
+  assembly: { bar: 'bg-indigo-500', badge: 'bg-indigo-50 text-indigo-700' },
+  distribution: { bar: 'bg-amber-500', badge: 'bg-amber-50 text-amber-700' },
+  retail: { bar: 'bg-rose-500', badge: 'bg-rose-50 text-rose-700' },
+  customer: { bar: 'bg-purple-500', badge: 'bg-purple-50 text-purple-700' },
 };
 
 function CustomNode({ data, selected }) {
-  const config = nodeCategoryConfig[data.category] || nodeCategoryConfig.raw_material;
-  const IconComponent = iconMap[config.icon] || Boxes;
-
-  const isLowRisk = data.riskFactor?.toLowerCase().includes('low') || data.riskFactor?.toLowerCase().includes('minimal');
+  const Icon = icons[data.category] || Boxes;
+  const colors = categoryColors[data.category] || categoryColors.raw_material;
 
   return (
     <div
-      className={`relative w-72 rounded-xl border-2 bg-white shadow-md transition-all duration-200 ${
-        selected ? 'border-indigo-600 ring-4 ring-indigo-100 shadow-xl scale-[1.02]' : config.borderClass
-      } hover:shadow-lg`}
+      className={`relative w-60 rounded-xl bg-white border transition-all duration-150 shadow-xs overflow-hidden ${
+        selected ? 'border-indigo-600 ring-2 ring-indigo-100 shadow-md' : 'border-slate-200 hover:border-slate-300'
+      }`}
     >
-      {/* Input Handle (Left) */}
+      {/* Target Handle (Left) */}
       <Handle
         type="target"
         position={Position.Left}
-        className="!w-3 !h-3 !bg-slate-600 !border-2 !border-white"
+        className="!w-2.5 !h-2.5 !bg-slate-400 !border-2 !border-white"
       />
 
-      {/* Node Header Banner */}
-      <div className={`flex items-center justify-between px-3.5 py-2 rounded-t-[10px] text-white ${config.headerBg}`}>
-        <div className="flex items-center space-x-2">
-          <div className="p-1 rounded bg-white/20 backdrop-blur-xs">
-            <IconComponent className="w-4 h-4 text-white" />
-          </div>
-          <span className="text-xs font-semibold tracking-wide uppercase">{data.nodeType}</span>
-        </div>
-        <span className="text-[10px] font-medium bg-white/25 px-2 py-0.5 rounded-full">
-          {config.badge}
-        </span>
-      </div>
+      {/* Top Category Accent Line */}
+      <div className={`h-1.5 w-full ${colors.bar}`} />
 
-      {/* Node Body */}
-      <div className="p-3.5 space-y-2.5 bg-white">
-        <div>
-          <h4 className="text-sm font-bold text-slate-900 leading-snug line-clamp-1">
-            {data.name}
-          </h4>
-          <p className="text-[11px] text-slate-500 font-medium">{data.tier}</p>
-        </div>
-
-        {/* Location & Output */}
-        <div className="space-y-1 text-xs text-slate-600 pt-1 border-t border-slate-100">
-          <div className="flex items-center space-x-1.5 text-slate-600">
-            <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            <span className="truncate text-[11.5px]">{data.location}</span>
-          </div>
-          <div className="flex items-center space-x-1.5 text-slate-600">
-            <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            <span className="text-[11.5px]">Lead Time: <strong className="text-slate-800">{data.leadTime}</strong></span>
-          </div>
-        </div>
-
-        {/* Status Pill & Risk Badge */}
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+      {/* Content */}
+      <div className="p-3.5 space-y-2">
+        <div className="flex items-center justify-between">
           <div className="flex items-center space-x-1.5">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="text-[11px] font-medium text-emerald-700">{data.status}</span>
+            <Icon className="w-3.5 h-3.5 text-slate-500" />
+            <span className="text-[11px] font-medium text-slate-500">{data.tier}</span>
           </div>
+          <span className="flex items-center space-x-1 text-[11px] text-emerald-600 font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span>{data.status}</span>
+          </span>
+        </div>
 
-          <div
-            className={`flex items-center space-x-1 px-2 py-0.5 rounded text-[10.5px] font-semibold ${
-              isLowRisk ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
-            }`}
-          >
-            {isLowRisk ? (
-              <ShieldCheck className="w-3 h-3 text-emerald-600" />
-            ) : (
-              <AlertTriangle className="w-3 h-3 text-amber-600" />
-            )}
-            <span>{data.riskFactor}</span>
-          </div>
+        <div>
+          <h4 className="text-xs font-bold text-slate-900 leading-snug">
+            {data.nodeType}
+          </h4>
+          <p className="text-[11px] text-slate-500 truncate mt-0.5">
+            {data.name}
+          </p>
+        </div>
+
+        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+          <span className="truncate">{data.location.split(',')[0]}</span>
+          <span className="font-medium text-slate-600 shrink-0">{data.leadTime}</span>
         </div>
       </div>
 
-      {/* Output Handle (Right) */}
+      {/* Source Handle (Right) */}
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-3 !h-3 !bg-slate-600 !border-2 !border-white"
+        className="!w-2.5 !h-2.5 !bg-slate-400 !border-2 !border-white"
       />
     </div>
   );
