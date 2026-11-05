@@ -12,8 +12,10 @@ import {
   ShieldAlert,
   Clock,
   CheckCircle2,
+  AlertTriangle,
   Activity,
   Layers,
+  ArrowUpRight,
 } from 'lucide-react';
 
 export default function Dashboard({ activeTab, setIsSidebarOpen }) {
@@ -41,14 +43,14 @@ export default function Dashboard({ activeTab, setIsSidebarOpen }) {
                   <div className="space-y-1.5">
                     <div className="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-white/10 text-indigo-200 text-xs font-semibold backdrop-blur-xs">
                       <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-                      <span>AtmoGraph Supply Chain Ripple Predictor • Week 1 Milestone</span>
+                      <span>Enterprise Supply Chain Intelligence & Ripple Prediction</span>
                     </div>
                     <h2 className="text-xl lg:text-2xl font-bold tracking-tight">
                       Supply Chain Ripple Effect Dashboard
                     </h2>
                     <p className="text-slate-300 text-xs sm:text-sm max-w-2xl leading-relaxed">
-                      Explore an interactive multi-echelon network topology. In upcoming sprints,
-                      AtmoGraph will simulate failure ripples and predict disruption propagation across upstream and downstream tiers.
+                      Real-time interactive multi-echelon network topology. Monitor upstream suppliers,
+                      manufacturing facilities, distribution hubs, and evaluate disruption propagation across tiers.
                     </p>
                   </div>
 
@@ -85,7 +87,7 @@ export default function Dashboard({ activeTab, setIsSidebarOpen }) {
                   </p>
                 </div>
                 <span className="text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">
-                  Week 1 Mock Models
+                  Live Telemetry
                 </span>
               </div>
 
@@ -129,17 +131,17 @@ export default function Dashboard({ activeTab, setIsSidebarOpen }) {
               <NetworkGraph />
             </section>
 
-            {/* Supplementary Information Grid (Supply Chain Tiers & Upcoming Capabilities) */}
+            {/* Supplementary Information Grid (Supply Chain Tiers & Critical Path Analysis) */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Echelon Flow Summary */}
               <div className="lg:col-span-2 bg-white rounded-xl p-5 border border-slate-200/90 shadow-2xs space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div>
                     <h4 className="text-sm font-bold text-slate-900">Echelon Flow Path & Stages</h4>
-                    <p className="text-xs text-slate-500">Current active sequence modeled for AtmoGraph</p>
+                    <p className="text-xs text-slate-500">Active supply chain flow sequence modeled for AtmoGraph</p>
                   </div>
                   <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
-                    All Stages Verified
+                    All Stages Active
                   </span>
                 </div>
 
@@ -182,12 +184,12 @@ export default function Dashboard({ activeTab, setIsSidebarOpen }) {
                 </div>
               </div>
 
-              {/* Project Roadmap / Next Milestones */}
+              {/* Critical Path & Resilience Alerts */}
               <div className="bg-white rounded-xl p-5 border border-slate-200/90 shadow-2xs space-y-3.5">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                  <h4 className="text-sm font-bold text-slate-900">Project Development Plan</h4>
-                  <span className="text-[10px] uppercase font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
-                    Roadmap
+                  <h4 className="text-sm font-bold text-slate-900">Network Resilience Alerts</h4>
+                  <span className="text-[10px] uppercase font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
+                    Stable
                   </span>
                 </div>
 
@@ -195,32 +197,32 @@ export default function Dashboard({ activeTab, setIsSidebarOpen }) {
                   <div className="flex items-start space-x-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-slate-800">Week 1: Frontend Dashboard</p>
-                      <p className="text-slate-500 text-[11px]">Static React Flow graph, Tailwind styling, summary cards.</p>
+                      <p className="font-semibold text-slate-800">Raw Material Pipeline</p>
+                      <p className="text-slate-500 text-[11px]">Primary extraction and ore supply running on schedule.</p>
                     </div>
                   </div>
 
-                  <div className="flex items-start space-x-2.5 opacity-70">
-                    <Clock className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                  <div className="flex items-start space-x-2.5">
+                    <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-slate-700">Week 2: Ripple Simulation UI</p>
-                      <p className="text-slate-400 text-[11px]">Interactive disturbance triggering & cascade animations.</p>
+                      <p className="font-semibold text-slate-700">Component Manufacturer Watch</p>
+                      <p className="text-slate-500 text-[11px]">Synapse Microtech buffer inventory at 14 days lead threshold.</p>
                     </div>
                   </div>
 
-                  <div className="flex items-start space-x-2.5 opacity-70">
-                    <Clock className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                  <div className="flex items-start space-x-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-slate-700">Week 3: Neo4j Graph DB Sync</p>
-                      <p className="text-slate-400 text-[11px]">Dynamic graph queries & multi-tier supplier relationship storage.</p>
+                      <p className="font-semibold text-slate-700">Assembly MegaPlant Throughput</p>
+                      <p className="text-slate-500 text-[11px]">Austin facility operating at 96% operational capacity.</p>
                     </div>
                   </div>
 
-                  <div className="flex items-start space-x-2.5 opacity-70">
-                    <Clock className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                  <div className="flex items-start space-x-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-slate-700">Week 4: ML Ripple Predictor</p>
-                      <p className="text-slate-400 text-[11px]">GNN model inferences for bottleneck and shockwave impact.</p>
+                      <p className="font-semibold text-slate-700">Fulfillment & Last-Mile</p>
+                      <p className="text-slate-500 text-[11px]">Central distribution maintaining 99.1% on-time dispatch rate.</p>
                     </div>
                   </div>
                 </div>

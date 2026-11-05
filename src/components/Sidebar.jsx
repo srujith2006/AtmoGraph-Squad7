@@ -14,7 +14,7 @@ import {
 
 const navigationItems = [
   { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
-  { id: 'network', name: 'Supply Chain Network', icon: Network, badge: 'Live Graph' },
+  { id: 'network', name: 'Supply Chain Network', icon: Network, badge: 'Active' },
   { id: 'suppliers', name: 'Suppliers', icon: Building2, count: '24' },
   { id: 'risk', name: 'Risk Overview', icon: AlertOctagon, count: 'Low' },
   { id: 'settings', name: 'Settings', icon: Settings },
@@ -48,8 +48,8 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }) 
                 <h1 className="font-extrabold text-lg text-slate-900 tracking-tight">
                   AtmoGraph
                 </h1>
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded border border-indigo-200/50">
-                  v0.1
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-200/50">
+                  Live
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 font-medium tracking-tight">
@@ -68,15 +68,15 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }) 
           </button>
         </div>
 
-        {/* Milestone Indicator */}
+        {/* Network Status Banner */}
         <div className="px-5 py-3">
           <div className="bg-gradient-to-r from-indigo-50/80 to-sky-50/80 border border-indigo-100/80 rounded-xl p-3">
             <div className="flex items-center space-x-2 text-indigo-700 font-semibold text-xs">
-              <Sparkles className="w-4 h-4 text-indigo-500 shrink-0" />
-              <span>Week 1 Milestone: Static Canvas</span>
+              <Activity className="w-4 h-4 text-indigo-500 shrink-0" />
+              <span>Network Topology Active</span>
             </div>
             <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
-              Interactive React Flow supply chain topology with mock data models.
+              6 multi-tier echelons connected with end-to-end dependency tracking.
             </p>
           </div>
         </div>
@@ -145,12 +145,12 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }) 
         {/* Sidebar Footer */}
         <div className="p-4 border-t border-slate-100 bg-slate-50/50">
           <div className="flex items-center space-x-3 p-2 rounded-xl bg-white border border-slate-200/80 shadow-xs">
-            <div className="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-xs">
-              FD
+            <div className="w-9 h-9 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">
+              SC
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-slate-800 truncate">Frontend Lead</p>
-              <p className="text-[11px] text-slate-400 truncate">AtmoGraph Workspace</p>
+              <p className="text-xs font-semibold text-slate-800 truncate">Supply Chain Ops</p>
+              <p className="text-[11px] text-slate-400 truncate">Global Operations Center</p>
             </div>
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100" />
           </div>

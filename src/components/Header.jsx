@@ -86,8 +86,8 @@ export default function Header({ setIsOpen, onResetView }) {
             AG
           </div>
           <div className="hidden md:block text-left">
-            <p className="text-xs font-semibold text-slate-800 leading-none">Dev Team</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">AtmoGraph v0.1</p>
+            <p className="text-xs font-semibold text-slate-800 leading-none">Operations Team</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">AtmoGraph Enterprise</p>
           </div>
         </div>
       </div>

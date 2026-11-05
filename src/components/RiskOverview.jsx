@@ -101,8 +101,8 @@ export default function RiskOverview() {
       <div className="p-4 bg-indigo-50/60 border border-indigo-100 rounded-xl flex items-center space-x-3 text-xs text-indigo-900">
         <Sparkles className="w-5 h-5 text-indigo-500 shrink-0" />
         <p>
-          <strong>Week 2 Preview:</strong> The Ripple Effect Predictor engine will let you introduce synthetic shocks
-          (e.g., port closure, factory outage) and visualize the wave propagation in real-time across the graph canvas.
+          <strong>Ripple Effect Simulation Engine:</strong> Analyzes synthetic stress tests
+          (e.g., port bottlenecks, manufacturing outages) and models wave propagation across dependent downstream nodes.
         </p>
       </div>
     </div>

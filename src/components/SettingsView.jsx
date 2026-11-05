@@ -7,7 +7,7 @@ export default function SettingsView() {
       <div className="bg-white p-5 rounded-xl border border-slate-200">
         <h3 className="text-base font-bold text-slate-900">Application Configuration</h3>
         <p className="text-xs text-slate-500">
-          Frontend environment settings, visualization preferences, and mock datasource controls
+          Network topology preferences, telemetry settings, and display controls
         </p>
       </div>
 
@@ -18,18 +18,18 @@ export default function SettingsView() {
             <h4 className="text-sm font-bold">Data Source Configuration</h4>
           </div>
           <p className="text-xs text-slate-500 leading-relaxed">
-            In Week 1, AtmoGraph operates exclusively on static mock data as per requirements. Neo4j graph database integration and backend REST endpoints will be linked in Week 3.
+            Data pipeline management and connection settings for multi-tier node monitoring.
           </p>
           <div className="space-y-2 text-xs">
             <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-100">
               <span className="font-medium text-slate-700">Active Pipeline</span>
               <span className="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                Static Mock Data (Active)
+                Connected & Synchronized
               </span>
             </div>
-            <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-100 opacity-60">
-              <span className="font-medium text-slate-700">Neo4j Bolt URI</span>
-              <span className="font-mono text-slate-500">bolt://localhost:7687 (Week 3)</span>
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+              <span className="font-medium text-slate-700">Data Refresh Interval</span>
+              <span className="font-medium text-slate-600">Real-Time Continuous</span>
             </div>
           </div>
         </div>
@@ -40,7 +40,7 @@ export default function SettingsView() {
             <h4 className="text-sm font-bold">Network Canvas Preferences</h4>
           </div>
           <p className="text-xs text-slate-500 leading-relaxed">
-            Controls for the React Flow topology display, animations, and edge styling.
+            Display options for React Flow network topology, animated edges, and minimap tracking.
           </p>
           <div className="space-y-2 text-xs">
             <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-100">

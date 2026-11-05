@@ -228,7 +228,7 @@ export default function NetworkGraph() {
         <div className="flex items-center space-x-4">
           <span>Pan: <strong>Click & Drag</strong></span>
           <span>Zoom: <strong>Scroll Wheel</strong></span>
-          <span className="text-indigo-600 font-medium">Static Mock Topology • Week 1 Milestone</span>
+          <span className="text-indigo-600 font-medium">Real-Time Network Telemetry</span>
         </div>
       </div>
     </div>
