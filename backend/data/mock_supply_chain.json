@@ -1,0 +1,66 @@
+{
+  "suppliers": [
+    {
+      "id": "S001",
+      "name": "Chip Supplier",
+      "country": "China",
+      "risk_level": "Low"
+    }
+  ],
+  "factories": [
+    {
+      "id": "F001",
+      "name": "India Factory",
+      "country": "India",
+      "risk_level": "Medium"
+    }
+  ],
+  "ports": [
+    {
+      "id": "P001",
+      "name": "Chennai Port",
+      "country": "India"
+    }
+  ],
+  "warehouses": [
+    {
+      "id": "W001",
+      "name": "Singapore Warehouse",
+      "country": "Singapore"
+    }
+  ],
+  "retailers": [
+    {
+      "id": "R001",
+      "name": "US Retailer",
+      "country": "USA"
+    }
+  ],
+  "relationships": [
+    {
+      "type": "SUPPLIES_TO",
+      "from_id": "S001",
+      "to_id": "F001",
+      "lead_time_days": 12,
+      "capacity": 5000
+    },
+    {
+      "type": "SHIPS_TO",
+      "from_id": "F001",
+      "to_id": "P001",
+      "lead_time_days": 3
+    },
+    {
+      "type": "TRANSPORTS_TO",
+      "from_id": "P001",
+      "to_id": "W001",
+      "lead_time_days": 7
+    },
+    {
+      "type": "DISTRIBUTES_TO",
+      "from_id": "W001",
+      "to_id": "R001",
+      "lead_time_days": 5
+    }
+  ]
+}
