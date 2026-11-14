@@ -2,20 +2,20 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
 
-# Distribution / packaging
-.Python
+# Python virtual environments & distribution
+.env
+.venv
+env/
+venv/
+ENV/
 build/
 develop-eggs/
 dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
 parts/
 sdist/
 var/
@@ -26,15 +26,6 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# Virtual environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
 # Testing and coverage
 .pytest_cache/
 .coverage
@@ -42,9 +33,6 @@ venv.bak/
 .cache
 nosetests.xml
 coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
 htmlcov/
 
 # Static type checkers & linters
@@ -55,14 +43,30 @@ dmypy.json
 .pytype/
 .ruff_cache/
 
+# Node & Frontend (Vite / React)
+node_modules/
+dist-ssr/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.local
+
 # IDE and editors
 .idea/
 .vscode/*
 !.vscode/settings.json
 !.vscode/launch.json
+!.vscode/extensions.json
 *.swp
 *.swo
 *~
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # Operating system artifacts
 .DS_Store
