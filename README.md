@@ -220,3 +220,44 @@ The next development phases will build on this database foundation and follow th
 
 **AtmoGraph – Backend Development**  
 *Week 1: Graph Foundations – Completed*
+
+
+
+### Neo4j Database Connection
+
+The backend uses the Neo4j Python Driver to establish a secure connection with Neo4j AuraDB.
+
+**File:** `backend/database/connection.py`
+
+**Features:**
+- Loads Neo4j credentials from the project's `.env` file.
+- Validates the required environment variables (`NEO4J_URI`, `NEO4J_USERNAME`, and `NEO4J_PASSWORD`).
+- Creates a Neo4j driver using the configured AuraDB URI.
+- Verifies database connectivity using `driver.verify_connectivity()`.
+- Retrieves and displays the total number of nodes in the database.
+- Handles connection errors and closes the driver after testing.
+
+**Environment Configuration:**
+
+Configure the following variables in the project-root `.env` file:
+
+```env
+NEO4J_URI=neo4j+s://your-aura-instance
+NEO4J_USERNAME=your-username
+NEO4J_PASSWORD=your-password
+```
+
+**Test the Connection:**
+
+```bash
+python backend/database/connection.py
+```
+
+A successful connection displays:
+
+```text
+Successfully connected to Neo4j AuraDB!
+Total nodes in database: <node_count>
+```
+
+**Note:** The `.env` file contains private credentials and must not be committed to GitHub.
