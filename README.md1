@@ -1,0 +1,15 @@
+## 📌 Project Summary – Week 1
+
+During Week 1, the initial development phase of AtmoGraph was started with a focus on understanding the project requirements and preparing the basic data structure.
+
+### Key Achievements
+- Set up the initial Python environment.
+- Imported and tested the required libraries.
+- Created a basic supply chain dataset.
+- Explored supplier, factory, port and risk-related information.
+- Prepared an initial JSON structure for storing article details and entities.
+
+### Outcome
+Successfully completed the initial project setup and established a foundation for further development of supply chain data processing and relationship extraction.
+
+**Status:** Initial development completed.
