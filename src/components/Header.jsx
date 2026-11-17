@@ -1,7 +1,27 @@
-import React from 'react';
-import { Menu, Search, Bell } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu, Search, Bell, Activity } from 'lucide-react';
+import { fetchHealth } from '../services/api';
 
 export default function Header({ setIsOpen }) {
+  const [backendStatus, setBackendStatus] = useState('Checking...');
+  const [isLive, setIsLive] = useState(false);
+
+  useEffect(() => {
+    async function checkStatus() {
+      const health = await fetchHealth();
+      if (health && health.status === 'healthy') {
+        setBackendStatus(`FastAPI v${health.version}`);
+        setIsLive(true);
+      } else {
+        setBackendStatus('Offline (Mock Mode)');
+        setIsLive(false);
+      }
+    }
+    checkStatus();
+    const interval = setInterval(checkStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <header className="h-16 px-6 bg-white border-b border-slate-200 flex items-center justify-between sticky top-0 z-30">
       {/* Left: Mobile Toggle & Page Title */}
@@ -16,10 +36,10 @@ export default function Header({ setIsOpen }) {
 
         <div>
           <h1 className="text-base font-semibold text-slate-900">
-            Supply Chain Network
+            AtmoGraph — Supply Chain Ripple Predictor
           </h1>
           <p className="text-xs text-slate-400 hidden sm:block">
-            Multi-tier flow and node status overview
+            Real-time multi-hop graph disruption prediction
           </p>
         </div>
       </div>
@@ -36,10 +56,23 @@ export default function Header({ setIsOpen }) {
           />
         </div>
 
-        {/* Status indicator */}
-        <div className="flex items-center space-x-1.5 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100 font-medium">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" />
-          <span>Operational</span>
+        {/* Dynamic Backend Status Indicator */}
+        <div
+          className={`flex items-center space-x-1.5 text-xs px-2.5 py-1 rounded-full border font-medium ${
+            isLive
+              ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+              : 'text-amber-700 bg-amber-50 border-amber-200'
+          }`}
+        >
+          <span
+            className={`w-2 h-2 rounded-full ${
+              isLive ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+            }`}
+          />
+          <span className="flex items-center gap-1">
+            <Activity className="w-3 h-3" />
+            {backendStatus}
+          </span>
         </div>
 
         {/* Notifications */}
