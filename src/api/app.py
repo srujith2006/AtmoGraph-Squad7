@@ -10,6 +10,7 @@ from src.core.logging import setup_logging, get_logger
 from src.core.middleware import RequestLoggingMiddleware
 from src.core.exceptions import register_exception_handlers
 from src.api.routes.health import router as health_router
+from src.api.routes.graph import router as graph_router
 
 logger = get_logger("atmograph.api")
 
@@ -62,6 +63,7 @@ def create_app() -> FastAPI:
 
     # 4. Mount System Routers
     app.include_router(health_router)
+    app.include_router(graph_router, prefix=settings.api_prefix)
 
     return app
 
