@@ -42,6 +42,14 @@ async def ping():
     return {"ping": "pong", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
+@router.get("/neo4j", status_code=status.HTTP_200_OK)
+async def check_neo4j_health():
+    """Diagnostic probe for Neo4j connection pool and node availability."""
+    from src.core.neo4j import get_neo4j_pool
+    pool = get_neo4j_pool()
+    return await pool.check_health()
+
+
 @router.get("/test-error", include_in_schema=False)
 async def trigger_test_error(
     error_type: str = Query("custom", description="Type of error to trigger: custom | notfound | database | unhandled")

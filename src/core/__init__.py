@@ -14,6 +14,7 @@ from src.core.exceptions import (
     PayloadValidationError,
     register_exception_handlers,
 )
+from src.core.neo4j import Neo4jConnectionPool, get_neo4j_pool
 
 __all__ = [
     "Settings",
@@ -29,4 +30,6 @@ __all__ = [
     "InferenceBridgeError",
     "PayloadValidationError",
     "register_exception_handlers",
+    "Neo4jConnectionPool",
+    "get_neo4j_pool",
 ]

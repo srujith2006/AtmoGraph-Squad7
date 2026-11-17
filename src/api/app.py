@@ -9,6 +9,7 @@ from src.core.config import get_settings
 from src.core.logging import setup_logging, get_logger
 from src.core.middleware import RequestLoggingMiddleware
 from src.core.exceptions import register_exception_handlers
+from src.core.neo4j import get_neo4j_pool
 from src.api.routes.health import router as health_router
 from src.api.routes.graph import router as graph_router
 
@@ -24,8 +25,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         f"Starting {settings.app_name} v{settings.app_version} [{settings.environment}]",
         extra={"environment": settings.environment, "debug": settings.debug}
     )
+    # Initialize Neo4j connection pool with resilient fallback
+    pool = get_neo4j_pool()
+    await pool.connect(max_retries=1, initial_delay=0.1)
     yield
     logger.info(f"Shutting down {settings.app_name}")
+    await pool.close()
 
 
 def create_app() -> FastAPI:
