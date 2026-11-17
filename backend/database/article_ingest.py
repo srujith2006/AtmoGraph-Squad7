@@ -4,14 +4,17 @@ import sys
 import uuid
 from pathlib import Path
 
-# Allow importing the existing Neo4j connection module
+# Allow importing backend modules
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 sys.path.append(str(BACKEND_DIR))
 
 from database.connection import driver
+from utils.json_validator import validate_json
 
 # Default NLP JSON input file
-DEFAULT_JSON_FILE = BACKEND_DIR / "data" / "articles" / "sample_article.json"
+DEFAULT_JSON_FILE = (
+    BACKEND_DIR / "data" / "articles" / "sample_article.json"
+)
 
 # Convert NLP entity types into Neo4j labels
 ENTITY_LABELS = {
@@ -31,11 +34,8 @@ def load_article(json_file):
 
 def prepare_entities(entities):
     """
-    Preserve existing IDs and generate stable IDs for missing IDs.
-
-    Returns:
-        prepared_entities: Entities with IDs assigned.
-        entity_ids: Mapping of entity names to IDs.
+    Preserve existing IDs and generate stable IDs
+    for entities that do not have IDs.
     """
 
     prepared_entities = []
@@ -54,12 +54,15 @@ def prepare_entities(entities):
             print("Skipping entity with empty name")
             continue
 
-        # Preserve an existing ID
+        # Preserve existing ID
         entity_id = entity.get("id")
 
-        # Generate a stable ID if one is missing
+        # Generate ID if missing
         if not entity_id:
-            unique_string = f"atmograph:{entity_type}:{entity_name.casefold()}"
+
+            unique_string = (
+                f"atmograph:{entity_type}:{entity_name.casefold()}"
+            )
 
             generated_uuid = uuid.uuid5(
                 uuid.NAMESPACE_URL,
@@ -68,14 +71,16 @@ def prepare_entities(entities):
 
             entity_id = f"AUTO_{generated_uuid.hex}"
 
-            print(f"Generated ID for {entity_name}: {entity_id}")
+            print(
+                f"Generated ID for {entity_name}: {entity_id}"
+            )
 
-        # Create a new entity dictionary with its ID
         prepared_entity = entity.copy()
         prepared_entity["id"] = entity_id
         prepared_entity["name"] = entity_name
 
         prepared_entities.append(prepared_entity)
+
         entity_ids[entity_name] = entity_id
 
     return prepared_entities, entity_ids
@@ -111,21 +116,17 @@ def ingest_relationships(session, entity_ids, relationships):
 
     for relationship in relationships:
 
-        name_1 = relationship["entity_1"]
-        name_2 = relationship["entity_2"]
+        name_1 = relationship["entity_1"].strip()
+        name_2 = relationship["entity_2"].strip()
         relation = relationship["relation"]
 
-        # Find IDs using the shared entity mapping
         id_1 = entity_ids.get(name_1)
         id_2 = entity_ids.get(name_2)
 
         if not id_1 or not id_2:
-            print(f"Skipping relationship: {name_1} -> {name_2}")
-            continue
-
-        # Validate relationship type before using it in Cypher
-        if not relation.isidentifier() or not relation.isupper():
-            print(f"Invalid relationship type: {relation}")
+            print(
+                f"Skipping relationship: {name_1} -> {name_2}"
+            )
             continue
 
         query = f"""
@@ -142,7 +143,10 @@ def ingest_relationships(session, entity_ids, relationships):
             evidence=relationship.get("evidence", "")
         ).consume()
 
-        print(f"Created relationship: {name_1} -[{relation}]-> {name_2}")
+        print(
+            f"Created relationship: "
+            f"{name_1} -[{relation}]-> {name_2}"
+        )
 
 
 def ingest_detected_risks(session, entity_ids, detected_risks):
@@ -150,7 +154,7 @@ def ingest_detected_risks(session, entity_ids, detected_risks):
 
     for risk_data in detected_risks:
 
-        risk_name = risk_data["risk"]
+        risk_name = risk_data["risk"].strip()
         risk_id = entity_ids.get(risk_name)
 
         if not risk_id:
@@ -173,11 +177,17 @@ def ingest_detected_risks(session, entity_ids, detected_risks):
             f"Severity: {risk_data['severity']}"
         )
 
-        # Connect risk to its location, if available
+        # Connect risk to its location
         location_name = risk_data.get("location")
-        location_id = entity_ids.get(location_name) if location_name else None
+
+        location_id = (
+            entity_ids.get(location_name.strip())
+            if isinstance(location_name, str) and location_name.strip()
+            else None
+        )
 
         if location_id:
+
             session.run("""
                 MATCH (r:Risk {id: $risk_id})
                 MATCH (l:Location {id: $location_id})
@@ -192,10 +202,12 @@ def ingest_detected_risks(session, entity_ids, detected_risks):
         # Connect risk to affected entities
         for affected_name in risk_data.get("affected_entities", []):
 
-            affected_id = entity_ids.get(affected_name)
+            affected_id = entity_ids.get(affected_name.strip())
 
             if not affected_id:
-                print(f"  Unknown affected entity: {affected_name}")
+                print(
+                    f"  Unknown affected entity: {affected_name}"
+                )
                 continue
 
             session.run("""
@@ -213,7 +225,7 @@ def ingest_detected_risks(session, entity_ids, detected_risks):
 def main():
     """Run entity, relationship and risk ingestion."""
 
-    # Accept a JSON file path from the command line
+    # Accept JSON file path from command line
     json_file = (
         Path(sys.argv[1])
         if len(sys.argv) > 1
@@ -227,6 +239,16 @@ def main():
         print(f"JSON file not found: {json_file}")
         return
 
+    # Step 1: Validate JSON before Neo4j writes
+    if not validate_json(json_file):
+
+        print(
+            "\nArticle ingestion cancelled "
+            "due to validation errors."
+        )
+        return
+
+    # Step 2: Load validated JSON
     try:
         data = load_article(json_file)
 
@@ -238,22 +260,22 @@ def main():
         print(f"Unable to read JSON file: {error}")
         return
 
-    # Step 1: Prepare entities and generate missing IDs
-    prepared_entities, entity_ids = prepare_entities(data["entities"])
+    # Step 3: Prepare entities and generate missing IDs
+    prepared_entities, entity_ids = prepare_entities(
+        data["entities"]
+    )
 
+    # Step 4: Ingest into Neo4j
     with driver.session() as session:
 
-        # Step 2: Create entity nodes
         ingest_entities(session, prepared_entities)
 
-        # Step 3: Create relationships
         ingest_relationships(
             session,
             entity_ids,
             data["relationships"]
         )
 
-        # Step 4: Process detected risks
         ingest_detected_risks(
             session,
             entity_ids,
@@ -264,7 +286,9 @@ def main():
 
 
 if __name__ == "__main__":
+
     try:
         main()
+
     finally:
         driver.close()
