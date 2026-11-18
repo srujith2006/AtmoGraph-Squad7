@@ -1,268 +1,28 @@
 # AtmoGraph – Backend Development
 
-## 1. Overview
+## 1. Project Overview
 
-This branch contains the backend implementation for **AtmoGraph**, a graph-based global supply-chain analysis project.
+AtmoGraph is a graph-based global supply-chain analysis project designed to represent supply-chain entities, identify disruptions, and analyze relationships between different entities using Neo4j.
 
-The backend uses Python and Neo4j AuraDB to build and manage a supply-chain knowledge graph. It supports automated data ingestion, NLP-extracted entity processing, relationship mapping and supply-chain risk identification.
+The backend is developed using Python and Neo4j AuraDB. It supports automated data ingestion, JSON validation, entity identification, relationship creation, and risk information management.
 
-**Branch:** `Srujith-backend`  
-**Current Phase:** Week 2 – NLP Integration and Backend Development  
-**Status:** Week 1 Completed | Week 2 In Progress
+**Branch:** `Srujith-backend`
 
----
-
-## 2. Technology Stack
-
-| Technology | Purpose |
-|---|---|
-| Python | Backend development |
-| Neo4j AuraDB | Graph database |
-| Cypher | Graph queries and database operations |
-| Neo4j Python Driver | Python–Neo4j connectivity |
-| python-dotenv | Environment variable management |
-| JSON | Data storage and NLP output exchange |
-| Git & GitHub | Version control |
+**Role:** Backend Developer
 
 ---
 
-## 3. Week 1 – Graph Foundations
+## 2. Technologies Used
 
-### 3.1 Neo4j Database Setup
-
-- Created a Neo4j AuraDB Free instance named `AtmoGraph`.
-- Configured cloud database connectivity.
-- Successfully verified database connectivity using Python.
-
-### 3.2 Supply-Chain Graph Data Model
-
-Designed a mock global supply-chain network with five node types.
-
-| Node Label | Example Entity | ID |
-|---|---|---|
-| Supplier | Chip Supplier | S001 |
-| Factory | India Factory | F001 |
-| Port | Chennai Port | P001 |
-| Warehouse | Singapore Warehouse | W001 |
-| Retailer | US Retailer | R001 |
-
-### 3.3 Relationships
-
-Implemented four directed relationships:
-
-| Relationship | From | To |
-|---|---|---|
-| SUPPLIES_TO | Supplier | Factory |
-| SHIPS_TO | Factory | Port |
-| TRANSPORTS_TO | Port | Warehouse |
-| DISTRIBUTES_TO | Warehouse | Retailer |
-
-Relationship properties include `lead_time_days` and, where applicable, `capacity`.
-
-### 3.4 Database Constraints
-
-Created unique constraints for the `id` property of all five node labels:
-
-- Supplier
-- Factory
-- Port
-- Warehouse
-- Retailer
-
-These constraints help prevent duplicate entities.
-
-### 3.5 Python–Neo4j Connectivity
-
-- Installed the Neo4j Python Driver and python-dotenv.
-- Configured database credentials using a root-level `.env` file.
-- Implemented `backend/database/connection.py`.
-- Established Python connectivity with Neo4j AuraDB.
-- Retrieved and verified the database node count.
-
-### 3.6 Automated Data Ingestion
-
-Implemented `backend/database/ingest.py` to automate the insertion of supply-chain data into Neo4j.
-
-The ingestion workflow:
-
-1. Reads mock supply-chain data from a JSON file.
-2. Processes Supplier, Factory, Port, Warehouse and Retailer records.
-3. Uses Cypher `MERGE` to match or create nodes based on unique IDs.
-4. Creates directed relationships between corresponding nodes.
-5. Updates node and relationship properties.
-6. Executes database operations within a write transaction.
-
-### 3.7 Duplicate Prevention and Verification
-
-- Used `MERGE` to avoid duplicate nodes and relationships during repeated ingestion.
-- Tested the ingestion script multiple times.
-- Identified and corrected an extra relationship caused by inconsistent relationship-type capitalization.
-- Verified the final Week 1 dataset contains five nodes and four relationships.
-
-**Week 1 database verification:**
-
-| Database Element | Count |
-|---|---:|
-| Nodes | 5 |
-| Relationships | 4 |
-
-**Week 1 Backend Status: All planned deliverables completed.**
+- **Python** – Backend development and data processing
+- **Neo4j AuraDB** – Graph database
+- **Cypher** – Graph queries and relationship management
+- **JSON** – Data exchange between NLP processing and backend
+- **Git & GitHub** – Version control and collaboration
 
 ---
 
-## 4. Week 2 – NLP Integration and Backend Development
-
-Week 2 focuses on integrating NLP-extracted information into the existing Neo4j graph database.
-
-The backend receives structured JSON output containing article text, extracted entities, relationships and detected supply-chain risks.
-
-### 4.1 Neo4j Connection Improvements
-
-**File:** `backend/database/connection.py`
-
-Updated the database connection module with the following features:
-
-- Loads Neo4j credentials from the project's root-level `.env` file.
-- Validates required environment variables:
-  - `NEO4J_URI`
-  - `NEO4J_USERNAME`
-  - `NEO4J_PASSWORD`
-- Creates a Neo4j driver using the configured AuraDB URI.
-- Verifies database connectivity using `driver.verify_connectivity()`.
-- Retrieves and displays the total number of nodes in the database.
-- Handles connection errors and closes the driver after testing.
-
-**Connection test:**
-
-```bash
-python backend/database/connection.py
-```
-
-### 4.2 NLP JSON Input Structure
-
-Defined and tested a JSON structure compatible with the NLP/NER extraction output.
-
-The input contains the following major components:
-
-| Field | Description |
-|---|---|
-| article | Original news article text |
-| entities | Extracted entities with IDs, names and types |
-| relationships | Relationships between extracted entities |
-| detected_risks | Identified supply-chain risks |
-| severity_note | Explanation of risk severity classification |
-
-Supported entity types:
-
-| NLP Entity Type | Neo4j Node Label |
-|---|---|
-| GPE | Location |
-| RISK | Risk |
-| SHIPMENT | Shipment |
-| ORG | Organization |
-
-### 4.3 JSON Validation
-
-**File:** `backend/utils/json_validator.py`
-
-Implemented a JSON validation script to check the incoming NLP article data.
-
-The validator checks:
-
-- Valid JSON syntax.
-- Presence of required fields.
-- Article text is provided as a string.
-- Entities, relationships and detected risks are provided as lists.
-- Required input structure is available before processing.
-
-**Run the validator:**
-
-```bash
-python backend/utils/json_validator.py
-```
-
-### 4.4 NLP Article Ingestion into Neo4j
-
-**File:** `backend/database/article_ingest.py`
-
-Implemented an article ingestion module to process NLP-extracted information and store it in Neo4j.
-
-The ingestion workflow includes:
-
-1. Reads the sample NLP article JSON file.
-2. Processes extracted entities.
-3. Maps NLP entity types to corresponding Neo4j node labels.
-4. Creates or matches entity nodes using Cypher `MERGE`.
-5. Resolves entity names to their corresponding IDs.
-6. Creates relationships between extracted entities.
-7. Processes detected supply-chain risks.
-8. Connects risks to relevant locations and affected entities.
-
-### 4.5 Entity and Relationship Mapping
-
-The backend converts NLP-extracted information into a graph representation.
-
-Example entity relationships:
-
-| Source Entity | Relationship | Target Entity |
-|---|---|---|
-| Port congestion | LOCATED_IN | Singapore |
-| Port congestion | CAUSES | Shipment delay |
-| Semiconductor shipments | AFFECTED_BY | Port congestion |
-| Samsung | EXPERIENCING | Supply chain disruption |
-| Intel | EXPERIENCING | Supply chain disruption |
-
-Relationship evidence is stored as a property to retain supporting information from the source article.
-
-### 4.6 Supply-Chain Risk Processing
-
-The ingestion module processes detected risks and their associated information.
-
-Risk properties include:
-
-- Risk name
-- Severity
-- Evidence
-
-The backend creates the following connections:
-
-| Relationship | From | To |
-|---|---|---|
-| OCCURS_IN | Risk | Location |
-| AFFECTS | Risk | Affected Entity |
-
-This enables the graph to represent where a risk occurs and which supply-chain entities are affected.
-
-### 4.7 Week 2 Testing and Verification
-
-Tested the article ingestion workflow using `sample_article.json`.
-
-**Sample entities processed:**
-
-| Entity | Neo4j Label |
-|---|---|
-| Singapore | Location |
-| Port congestion | Risk |
-| Semiconductor shipments | Shipment |
-| Shipment delay | Risk |
-| Samsung | Organization |
-| Intel | Organization |
-| Supply chain disruption | Risk |
-
-**Testing results:**
-
-- Successfully processed seven extracted entities.
-- Successfully created five NLP entity-to-entity relationships.
-- Successfully processed three detected risks.
-- Successfully connected risks to their locations and affected entities where provided.
-- Verified the seven entity nodes and five NLP relationships in Neo4j Browser.
-- Received the successful completion message: `Article ingestion completed successfully!`
-
-**Note:** The seven entity nodes and five relationships refer to the sample NLP graph verification, not the total number of relationships in the database.
-
----
-
-## 5. Project Structure
+## 3. Project Structure
 
 ```text
 AtmoGraph-Team7/
@@ -273,157 +33,251 @@ AtmoGraph-Team7/
 │   │   ├── ingest.py
 │   │   └── article_ingest.py
 │   │
-│   ├── utils/
-│   │   └── json_validator.py
-│   │
 │   ├── data/
 │   │   ├── mock_supply_chain.json
 │   │   └── articles/
-│   │       └── sample_article.json
+│   │       ├── sample_article.json
+│   │       ├── test_no_ids.json
+│   │       └── team_output.json
 │   │
-│   └── requirements.txt
+│   └── utils/
+│       └── json_validator.py
 │
 ├── .env.example
 ├── .gitignore
 └── README.md
 ```
 
-The actual `.env` file is stored locally and excluded from version control.
+---
+
+## 4. Week 1 – Graph Database Foundations
+
+### 4.1 Neo4j Database Setup
+
+- Configured Neo4j AuraDB.
+- Established Python connectivity using the Neo4j Python driver.
+- Configured database credentials using environment variables.
+- Implemented connection verification.
+
+### 4.2 Supply Chain Graph Design
+
+Created the following entity types:
+
+- Supplier
+- Factory
+- Port
+- Warehouse
+- Retailer
+
+Implemented the following relationships:
+
+- `SUPPLIES_TO`
+- `SHIPS_TO`
+- `TRANSPORTS_TO`
+- `DISTRIBUTES_TO`
+
+### 4.3 Automated Data Ingestion
+
+Created a mock supply-chain dataset in JSON format and implemented Python scripts to automatically insert nodes and relationships into Neo4j.
+
+**Week 1 Result:** Successfully created and populated the initial supply-chain graph.
 
 ---
 
-## 6. Backend Setup Instructions
+## 5. Week 2 – NLP Output Integration and Backend Processing
 
-### Prerequisites
+### 5.1 Dynamic JSON Input
 
-- Python installed
-- Neo4j AuraDB instance
-- Git installed
+Implemented article ingestion that accepts JSON files through command-line arguments instead of relying on a fixed input file.
 
-### Step 1: Clone the repository
+Example:
 
-```bash
-git clone <repository-url>
-cd AtmoGraph-Team7
+```powershell
+python backend/database/article_ingest.py backend/data/articles/sample_article.json
 ```
 
-### Step 2: Install dependencies
+### 5.2 JSON Validation
 
-```bash
-pip install -r backend/requirements.txt
+Developed `json_validator.py` to validate incoming NLP JSON data before database ingestion.
+
+Validation includes:
+
+- JSON syntax verification.
+- Required field verification.
+- Entity type validation.
+- Duplicate entity ID and name checks.
+- Relationship type validation.
+- Entity reference verification.
+- Risk severity validation.
+- Detected risk and affected entity validation.
+
+Supported entity types:
+
+- `GPE`
+- `RISK`
+- `SHIPMENT`
+- `ORG`
+
+Supported relationship types:
+
+- `LOCATED_IN`
+- `CAUSES`
+- `OCCURS_IN`
+- `AFFECTS`
+- `AFFECTED_BY`
+- `EXPERIENCING`
+
+Supported severity levels:
+
+- `LOW`
+- `MEDIUM`
+- `HIGH`
+
+### 5.3 Automatic Entity ID Generation
+
+Implemented automatic ID generation for entities that do not contain an ID in the incoming JSON.
+
+- Existing IDs are preserved.
+- Missing IDs are generated using deterministic UUID generation.
+- Generated IDs use the `AUTO_` prefix.
+- Entity names and types are used to generate consistent IDs.
+
+This allows the backend to process JSON data even when the NLP output does not provide entity IDs.
+
+### 5.4 Neo4j Article Ingestion
+
+Implemented `article_ingest.py` to process NLP-generated JSON data.
+
+The ingestion process:
+
+1. Loads the JSON article.
+2. Validates the input.
+3. Prepares entity IDs.
+4. Creates or updates entity nodes.
+5. Creates relationships between entities.
+6. Updates detected risk information.
+7. Connects risks to locations and affected entities.
+
+### 5.5 Transaction Safety
+
+Implemented Neo4j managed transactions using `session.execute_write()`.
+
+This ensures that all database operations for an article are treated as a single transaction.
+
+- Successful ingestion commits all changes.
+- If an operation fails, the transaction is rolled back.
+- Prevents partially ingested article data.
+
+### 5.6 Duplicate Handling
+
+Used Cypher `MERGE` operations to avoid unnecessary duplicate nodes and relationships during repeated ingestion.
+
+Verified node and relationship counts after repeated ingestion.
+
+### 5.7 NLP Team Output Integration
+
+Successfully tested the backend using the JSON output received from the NLP development team.
+
+The test included:
+
+- Singapore as a geographical entity.
+- Port congestion and shipment delay as risks.
+- Semiconductor shipments as a shipment entity.
+- Samsung and Intel as organizations.
+- Relationships between the extracted entities.
+- Risk severity and affected entity information.
+
+**Integration Result:** JSON validation and Neo4j article ingestion completed successfully using the team's static sample dataset.
+
+---
+
+## 6. Current Backend Capabilities
+
+| Feature | Status |
+|---|---|
+| Neo4j AuraDB connection | Completed |
+| Supply-chain graph creation | Completed |
+| Mock data ingestion | Completed |
+| Dynamic JSON file input | Completed |
+| JSON validation | Completed |
+| Automatic entity ID generation | Completed |
+| Entity and relationship ingestion | Completed |
+| Risk information ingestion | Completed |
+| Duplicate handling | Tested |
+| Transaction safety | Tested |
+| Rollback verification | Passed |
+| NLP team JSON integration | Tested with static dataset |
+| Dynamic NLP output integration | Pending |
+| Multi-article ID management | Pending |
+
+---
+
+## 7. Running the Backend
+
+### Step 1: Install dependencies
+
+```powershell
+pip install neo4j python-dotenv certifi
 ```
 
-### Step 3: Configure environment variables
+### Step 2: Configure environment variables
 
-Create a `.env` file in the repository root:
+Create a `.env` file in the project root using `.env.example` as a reference.
+
+Configure:
 
 ```env
-NEO4J_URI=neo4j+s://your-aura-instance
-NEO4J_USERNAME=your-username
-NEO4J_PASSWORD=your-neo4j-password
+NEO4J_URI=your_neo4j_uri
+NEO4J_USERNAME=your_neo4j_username
+NEO4J_PASSWORD=your_neo4j_password
 ```
 
-Replace the placeholder values with your own Neo4j AuraDB credentials.
+Do not commit the `.env` file to GitHub.
 
-**Important:** Never commit or share the `.env` file.
+### Step 3: Configure SSL certificate path
 
-### Step 4: Test database connectivity
+For PowerShell:
 
-```bash
-python backend/database/connection.py
+```powershell
+$env:SSL_CERT_FILE = python -c "import certifi; print(certifi.where())"
 ```
 
-### Step 5: Run supply-chain data ingestion
+### Step 4: Validate an article JSON file
 
-```bash
-python backend/database/ingest.py
+```powershell
+python backend/utils/json_validator.py backend/data/articles/sample_article.json
 ```
 
-### Step 6: Validate NLP JSON input
+### Step 5: Ingest an article into Neo4j
 
-```bash
-python backend/utils/json_validator.py
+```powershell
+python backend/database/article_ingest.py backend/data/articles/sample_article.json
 ```
 
-### Step 7: Run NLP article ingestion
-
-```bash
-python backend/database/article_ingest.py
-```
-
-The article ingestion module currently uses the sample article JSON file configured in the script.
+You can replace the JSON file path with another article JSON file.
 
 ---
 
-## 7. Development Progress Tracker
+## 8. Current Development Status
 
-### Week 1 – Graph Foundations
+Week 1 graph database foundations have been completed.
 
-| Deliverable | Status |
-|---|---|
-| Neo4j AuraDB setup | Completed |
-| Supply-chain graph schema design | Completed |
-| Node creation | Completed |
-| Relationship creation | Completed |
-| Unique constraints | Completed |
-| Python–Neo4j connectivity | Completed |
-| Mock JSON dataset preparation | Completed |
-| Automated data ingestion | Completed |
-| Duplicate prevention testing | Completed |
-| Database verification | Completed |
+Week 2 backend processing features have been implemented and tested, including JSON validation, automatic entity ID generation, article ingestion, transaction safety, and integration with the NLP team's current static JSON output.
 
-### Week 2 – NLP Integration and Backend Development
-
-| Deliverable | Status |
-|---|---|
-| Neo4j connection improvements | Completed |
-| NLP JSON structure design and sample preparation | Completed |
-| JSON validator implementation | Completed |
-| Entity-to-Neo4j label mapping | Completed |
-| NLP entity ingestion | Completed |
-| NLP relationship ingestion | Completed |
-| Detected risk processing | Completed |
-| Risk-to-location and risk-to-entity mapping | Completed |
-| Sample article ingestion testing | Completed |
-| Neo4j graph verification | Completed |
-| Dynamic JSON file input | Pending |
-| Automatic ID generation when IDs are missing | Pending |
-| Stronger JSON and entity validation | Pending |
-| Improved error handling and duplicate handling | Pending |
-| Testing with actual NLP teammate output | Pending |
-| Final Week 2 integration testing | Pending |
-
-**Week 2 Backend Status: Core NLP article ingestion implemented and tested. Additional improvements and integration testing are in progress.**
+The next development phase focuses on integrating dynamically generated NLP outputs, establishing a reliable entity ID strategy across multiple articles, and supporting multi-article ingestion.
 
 ---
 
-## 8. Development Notes
+## 9. Future Improvements
 
-- This README tracks backend-specific development.
-- The main project README is maintained separately on the main branch.
-- Database credentials must remain in local environment variables.
-- Relationship types must follow consistent naming conventions.
-- Cypher `MERGE` is used for matching or creating nodes and relationships.
-- The backend is designed to consume structured JSON output from the NLP component.
-- The backend implementation will be extended to support dynamic article inputs and flexible entity identification.
-
----
-
-## 9. Upcoming Backend Work
-
-The following tasks are planned to complete Week 2:
-
-1. Implement dynamic JSON input so the ingestion module can process different article files.
-2. Generate unique IDs automatically when the incoming JSON does not contain IDs.
-3. Strengthen validation for entity types, names, relationship endpoints and risk severity.
-4. Improve error handling for invalid or incomplete input.
-5. Improve duplicate handling across multiple article ingestion runs.
-6. Test the backend with actual JSON output from the NLP teammate.
-7. Perform final Neo4j graph verification and update the project documentation.
+- Integrate dynamically generated NLP output.
+- Establish a collision-safe entity ID strategy across articles.
+- Support ingestion of multiple news articles.
+- Maintain article-level traceability for extracted entities and risks.
+- Support backend APIs for frontend integration.
+- Improve graph-based supply-chain risk analysis.
 
 ---
 
-**AtmoGraph – Backend Development**
-
-*Week 1: Graph Foundations – Completed*  
-*Week 2: NLP Integration and Backend Development – In Progress*
+**AtmoGraph – Backend Development**  
+*Python | Neo4j AuraDB | Cypher | JSON*
