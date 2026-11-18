@@ -12,6 +12,7 @@ from src.core.exceptions import register_exception_handlers
 from src.core.neo4j import get_neo4j_pool
 from src.api.routes.health import router as health_router
 from src.api.routes.graph import router as graph_router
+from src.api.routes.nlp import router as nlp_router
 
 logger = get_logger("atmograph.api")
 
@@ -69,6 +70,7 @@ def create_app() -> FastAPI:
     # 4. Mount System Routers
     app.include_router(health_router)
     app.include_router(graph_router, prefix=settings.api_prefix)
+    app.include_router(nlp_router, prefix=settings.api_prefix)
 
     return app
 

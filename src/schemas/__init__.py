@@ -41,6 +41,14 @@ from src.schemas.graph import (
     SupplyChainGraphTopology,
 )
 
+from src.schemas.nlp import (
+    NLPRelationship,
+    NLPDetectedRisk,
+    NLPIngestRequest,
+    NLPIngestResponse,
+    MatchedNodeImpact,
+)
+
 __all__ = [
     "NodeType",
     "RiskLevel",
@@ -58,6 +66,11 @@ __all__ = [
     "ShippingRouteEdge",
     "NLPExtractedEntity",
     "NLPDisruptionAlert",
+    "NLPRelationship",
+    "NLPDetectedRisk",
+    "NLPIngestRequest",
+    "NLPIngestResponse",
+    "MatchedNodeImpact",
     "HopDelayImpact",
     "HorizonPrediction",
     "GNNRipplePredictionResponse",
