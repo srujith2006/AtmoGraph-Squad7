@@ -1,0 +1,103 @@
+{
+  "article": "Port congestion in Singapore has delayed semiconductor shipments.\nSamsung and Intel are facing supply chain disruptions.",
+  "entities": [
+    {
+      "id": "E1",
+      "name": "Singapore",
+      "type": "GPE"
+    },
+    {
+      "id": "E2",
+      "name": "Port congestion",
+      "type": "RISK"
+    },
+    {
+      "id": "E3",
+      "name": "Semiconductor shipments",
+      "type": "SHIPMENT"
+    },
+    {
+      "id": "E4",
+      "name": "Shipment delay",
+      "type": "RISK"
+    },
+    {
+      "id": "E5",
+      "name": "Samsung",
+      "type": "ORG"
+    },
+    {
+      "id": "E6",
+      "name": "Intel",
+      "type": "ORG"
+    },
+    {
+      "id": "E7",
+      "name": "Supply chain disruption",
+      "type": "RISK"
+    }
+  ],
+  "relationships": [
+    {
+      "entity_1": "Port congestion",
+      "entity_2": "Singapore",
+      "relation": "LOCATED_IN",
+      "evidence": "Port congestion in Singapore has delayed semiconductor shipments."
+    },
+    {
+      "entity_1": "Port congestion",
+      "entity_2": "Shipment delay",
+      "relation": "CAUSES",
+      "evidence": "Port congestion in Singapore has delayed semiconductor shipments."
+    },
+    {
+      "entity_1": "Semiconductor shipments",
+      "entity_2": "Port congestion",
+      "relation": "AFFECTED_BY",
+      "evidence": "Port congestion in Singapore has delayed semiconductor shipments."
+    },
+    {
+      "entity_1": "Samsung",
+      "entity_2": "Supply chain disruption",
+      "relation": "EXPERIENCING",
+      "evidence": "Samsung and Intel are facing supply chain disruptions."
+    },
+    {
+      "entity_1": "Intel",
+      "entity_2": "Supply chain disruption",
+      "relation": "EXPERIENCING",
+      "evidence": "Samsung and Intel are facing supply chain disruptions."
+    }
+  ],
+  "detected_risks": [
+    {
+      "risk": "Port congestion",
+      "location": "Singapore",
+      "affected_entities": [
+        "Semiconductor shipments"
+      ],
+      "severity": "MEDIUM",
+      "evidence": "Port congestion in Singapore has delayed semiconductor shipments."
+    },
+    {
+      "risk": "Shipment delay",
+      "location": "Singapore",
+      "affected_entities": [
+        "Semiconductor shipments"
+      ],
+      "severity": "MEDIUM",
+      "evidence": "Port congestion in Singapore has delayed semiconductor shipments."
+    },
+    {
+      "risk": "Supply chain disruption",
+      "location": null,
+      "affected_entities": [
+        "Samsung",
+        "Intel"
+      ],
+      "severity": "MEDIUM",
+      "evidence": "Samsung and Intel are facing supply chain disruptions."
+    }
+  ],
+  "severity_note": "MEDIUM is an estimated classification based on the reported delays and disruptions; the article does not explicitly state severity levels."
+}
