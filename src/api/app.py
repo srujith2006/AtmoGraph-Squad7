@@ -13,6 +13,7 @@ from src.core.neo4j import get_neo4j_pool
 from src.api.routes.health import router as health_router
 from src.api.routes.graph import router as graph_router
 from src.api.routes.nlp import router as nlp_router
+from src.api.routes.predictions import router as predictions_router
 
 logger = get_logger("atmograph.api")
 
@@ -71,6 +72,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(graph_router, prefix=settings.api_prefix)
     app.include_router(nlp_router, prefix=settings.api_prefix)
+    app.include_router(predictions_router, prefix=settings.api_prefix)
 
     return app
 
