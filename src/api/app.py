@@ -14,6 +14,7 @@ from src.api.routes.health import router as health_router
 from src.api.routes.graph import router as graph_router
 from src.api.routes.nlp import router as nlp_router
 from src.api.routes.predictions import router as predictions_router
+from src.api.routes.websocket import router as websocket_router, rest_ws_router
 
 logger = get_logger("atmograph.api")
 
@@ -73,6 +74,8 @@ def create_app() -> FastAPI:
     app.include_router(graph_router, prefix=settings.api_prefix)
     app.include_router(nlp_router, prefix=settings.api_prefix)
     app.include_router(predictions_router, prefix=settings.api_prefix)
+    app.include_router(websocket_router)
+    app.include_router(rest_ws_router, prefix=settings.api_prefix)
 
     return app
 
