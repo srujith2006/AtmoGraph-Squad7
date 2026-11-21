@@ -1,6 +1,7 @@
 """Shared pytest configuration, fixtures, and mock instances for AtmoGraph testing."""
 
 import pytest
+from httpx import ASGITransport, AsyncClient
 from starlette.testclient import TestClient
 
 from src.api.app import create_app
@@ -18,6 +19,14 @@ def client(app_instance):
     """Provide a synchronous TestClient configured with the FastAPI test app."""
     with TestClient(app_instance, raise_server_exceptions=False) as test_client:
         yield test_client
+
+
+@pytest.fixture
+async def async_client(app_instance):
+    """Provide an asynchronous httpx client configured with the ASGI application."""
+    transport = ASGITransport(app=app_instance)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as ac:
+        yield ac
 
 
 @pytest.fixture
