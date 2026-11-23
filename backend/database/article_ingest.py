@@ -14,7 +14,7 @@ from utils.json_validator import (
     SUPPORTED_RELATIONSHIPS
 )
 
-# Default NLP JSON input file
+# Default GMRID JSON input file
 DEFAULT_JSON_FILE = (
     BACKEND_DIR / "data" / "articles" / "sample_article.json"
 )
@@ -29,7 +29,7 @@ ENTITY_LABELS = {
 
 
 def load_article(json_file):
-    """Read the NLP output JSON file."""
+    """Read the GMRID article JSON file."""
 
     with open(json_file, "r", encoding="utf-8") as file:
         return json.load(file)
@@ -83,8 +83,101 @@ def prepare_entities(entities):
     return prepared_entities, entity_ids
 
 
+def ingest_article_node(tx, article_data):
+    """Create or update the main Article node."""
+
+    metadata = article_data["metadata"]
+
+    # Flatten metadata into Neo4j-compatible properties.
+    # Preserve the full original metadata separately as JSON.
+    properties = {
+        "record_id": article_data["record_id"],
+        "source": article_data["source"],
+        "text": article_data["article"],
+        "severity_note": article_data["severity_note"],
+        "metadata_json": json.dumps(
+            metadata,
+            ensure_ascii=False
+        ),
+        "date": metadata.get("date"),
+        "region": metadata.get("region"),
+        "latitude": metadata.get("latitude"),
+        "longitude": metadata.get("longitude"),
+        "maritime_label": metadata.get("maritime_label"),
+        "found_ports": metadata.get("found_ports", []),
+        "contains_port_info": metadata.get("contains_port_info"),
+        "if_labeled": metadata.get("if_labeled"),
+        "year": metadata.get("year"),
+        "month": metadata.get("month"),
+        "week": metadata.get("week"),
+        "category": metadata.get("category", []),
+        "summarized_label": metadata.get("summarized_label"),
+        "gpt_4o_category": (
+            metadata.get("gpt_4o_label") or {}
+        ).get("category"),
+        "gpt_4o_specific_tags": (
+            metadata.get("gpt_4o_label") or {}
+        ).get("specific_tags", []),
+        "source_severity": metadata.get("source_severity")
+    }
+
+    result = tx.run("""
+        MERGE (a:Article {record_id: $record_id})
+        SET a += $properties
+        RETURN a.record_id AS record_id
+    """,
+        record_id=article_data["record_id"],
+        properties=properties
+    )
+
+    if result.single() is None:
+        raise RuntimeError("Failed to create Article node.")
+
+    return [
+        f"Processed Article record: {article_data['record_id']}"
+    ]
+
+
+def ingest_ports(tx, article_data):
+    """Create Port nodes and connect them to the article."""
+
+    messages = []
+    metadata = article_data["metadata"]
+
+    ports = metadata.get("found_ports", [])
+    record_id = article_data["record_id"]
+
+    for port_name in ports:
+
+        port_name = port_name.strip()
+
+        if not port_name:
+            continue
+
+        result = tx.run("""
+            MATCH (a:Article {record_id: $record_id})
+            MERGE (p:Port {name: $port_name})
+            MERGE (a)-[:MENTIONS_PORT]->(p)
+            RETURN p.name AS port_name
+        """,
+            record_id=record_id,
+            port_name=port_name
+        )
+
+        if result.single() is None:
+            raise RuntimeError(
+                f"Failed to connect article to port: {port_name}"
+            )
+
+        messages.append(
+            f"Connected article to port: {port_name}"
+        )
+
+    return messages
+
+
 def ingest_entities(tx, entities):
-    """Create or update entity nodes inside a transaction."""
+    """Create or update entity nodes."""
 
     messages = []
 
@@ -116,8 +209,43 @@ def ingest_entities(tx, entities):
     return messages
 
 
+def connect_article_entities(tx, record_id, entities):
+    """Connect the article to its extracted entities."""
+
+    messages = []
+
+    for entity in entities:
+
+        label = ENTITY_LABELS[entity["type"]]
+
+        query = f"""
+        MATCH (a:Article {{record_id: $record_id}})
+        MATCH (e:{label} {{id: $entity_id}})
+        MERGE (a)-[:MENTIONS]->(e)
+        RETURN e.name AS entity_name
+        """
+
+        result = tx.run(
+            query,
+            record_id=record_id,
+            entity_id=entity["id"]
+        )
+
+        if result.single() is None:
+            raise RuntimeError(
+                f"Could not connect article to entity: "
+                f"{entity['name']}"
+            )
+
+        messages.append(
+            f"Article mentions entity: {entity['name']}"
+        )
+
+    return messages
+
+
 def ingest_relationships(tx, entity_ids, relationships):
-    """Create NLP relationships inside a transaction."""
+    """Create NLP relationships."""
 
     messages = []
 
@@ -137,7 +265,8 @@ def ingest_relationships(tx, entity_ids, relationships):
 
         if not id_1 or not id_2:
             raise ValueError(
-                f"Unknown relationship entity: {name_1} -> {name_2}"
+                f"Unknown relationship entity: "
+                f"{name_1} -> {name_2}"
             )
 
         query = f"""
@@ -170,7 +299,7 @@ def ingest_relationships(tx, entity_ids, relationships):
 
 
 def ingest_detected_risks(tx, entity_ids, detected_risks):
-    """Update risks and create their associated relationships."""
+    """Update risks and create associated relationships."""
 
     messages = []
 
@@ -184,7 +313,6 @@ def ingest_detected_risks(tx, entity_ids, detected_risks):
                 f"Unknown risk entity: {risk_name}"
             )
 
-        # Update risk properties
         result = tx.run("""
             MATCH (r:Risk {id: $risk_id})
             SET r.severity = $severity,
@@ -236,7 +364,7 @@ def ingest_detected_risks(tx, entity_ids, detected_risks):
                 )
 
             messages.append(
-                f"  Connected to location: {location_name}"
+                f"Connected risk to location: {location_name}"
             )
 
         # Connect risk to affected entities
@@ -267,24 +395,42 @@ def ingest_detected_risks(tx, entity_ids, detected_risks):
                 )
 
             messages.append(
-                f"  Affects: {affected_name}"
+                f"Risk affects: {affected_name}"
             )
 
     return messages
 
 
-def ingest_article_transaction(tx, entities, entity_ids,
-                               relationships, detected_risks):
-    """
-    Execute all article ingestion operations in one transaction.
-
-    If any operation fails, Neo4j rolls back the transaction.
-    """
+def ingest_article_transaction(
+    tx,
+    article_data,
+    entities,
+    entity_ids,
+    relationships,
+    detected_risks
+):
+    """Execute all article operations in one transaction."""
 
     messages = []
 
     messages.extend(
+        ingest_article_node(tx, article_data)
+    )
+
+    messages.extend(
+        ingest_ports(tx, article_data)
+    )
+
+    messages.extend(
         ingest_entities(tx, entities)
+    )
+
+    messages.extend(
+        connect_article_entities(
+            tx,
+            article_data["record_id"],
+            entities
+        )
     )
 
     messages.extend(
@@ -307,7 +453,7 @@ def ingest_article_transaction(tx, entities, entity_ids,
 
 
 def main():
-    """Validate and ingest an NLP article into Neo4j."""
+    """Validate and ingest a GMRID article into Neo4j."""
 
     json_file = (
         Path(sys.argv[1])
@@ -354,6 +500,7 @@ def main():
 
             messages = session.execute_write(
                 ingest_article_transaction,
+                data,
                 prepared_entities,
                 entity_ids,
                 data["relationships"],
@@ -364,7 +511,7 @@ def main():
         for message in messages:
             print(message)
 
-        print("\nArticle ingestion completed successfully!")
+        print("\nGMRID article ingestion completed successfully!")
 
     except Exception as error:
         print("\nArticle ingestion failed!")

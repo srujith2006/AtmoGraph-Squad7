@@ -6,7 +6,7 @@ from pathlib import Path
 # Locate backend directory
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 
-# Default NLP JSON input file
+# Default GMRID JSON input file
 DEFAULT_JSON_FILE = (
     BACKEND_DIR / "data" / "articles" / "sample_article.json"
 )
@@ -29,7 +29,7 @@ SUPPORTED_RELATIONSHIPS = {
     "EXPERIENCING"
 }
 
-# Allowed severity levels
+# Allowed NLP risk severity levels
 SUPPORTED_SEVERITIES = {
     "LOW",
     "MEDIUM",
@@ -37,70 +37,150 @@ SUPPORTED_SEVERITIES = {
 }
 
 
-def validate_json(file_path):
-    """Validate NLP article JSON before Neo4j ingestion."""
+def print_errors(errors):
+    """Display validation errors."""
 
-    errors = []
+    print("\nJSON validation failed!")
 
-    # Check file existence
-    if not file_path.exists():
-        print(f"Error: JSON file not found: {file_path}")
-        return False
+    for error in errors:
+        print(f"- {error}")
 
-    try:
-        with open(file_path, "r", encoding="utf-8") as file:
-            data = json.load(file)
+    return False
 
-    except json.JSONDecodeError as error:
-        print(f"Invalid JSON format: {error}")
-        return False
 
-    except OSError as error:
-        print(f"Unable to read JSON file: {error}")
-        return False
+def is_number_or_none(value):
+    """Check whether a value is numeric or None."""
 
-    print("JSON syntax is valid!")
+    return (
+        value is None
+        or (
+            isinstance(value, (int, float))
+            and not isinstance(value, bool)
+        )
+    )
 
-    # Check root structure
-    if not isinstance(data, dict):
-        print("Error: JSON root must be an object!")
-        return False
 
-    required_fields = [
-        "article",
-        "entities",
-        "relationships",
-        "detected_risks",
-        "severity_note"
+def validate_metadata(metadata, errors):
+    """Validate GMRID metadata."""
+
+    if not isinstance(metadata, dict):
+        errors.append("metadata must be an object!")
+        return
+
+    # String fields that may be null
+    string_fields = [
+        "date",
+        "region",
+        "maritime_label",
+        "if_labeled",
+        "summarized_label",
+        "source_severity"
     ]
 
-    for field in required_fields:
-        if field not in data:
-            errors.append(f"Missing required field: {field}")
+    for field in string_fields:
+        if field in metadata:
+            value = metadata[field]
 
-    if errors:
-        return print_errors(errors)
+            if value is not None and not isinstance(value, str):
+                errors.append(
+                    f"metadata.{field} must be a string or null!"
+                )
 
-    # Validate basic field types
-    if not isinstance(data["article"], str):
-        errors.append("article must be a string!")
+    # Coordinates
+    for field in ["latitude", "longitude"]:
+        if field in metadata:
+            if not is_number_or_none(metadata[field]):
+                errors.append(
+                    f"metadata.{field} must be a number or null!"
+                )
 
-    if not isinstance(data["severity_note"], str):
-        errors.append("severity_note must be a string!")
+    # Integer date fields
+    for field in ["year", "month", "week"]:
+        if field in metadata:
+            value = metadata[field]
 
-    for field in ["entities", "relationships", "detected_risks"]:
-        if not isinstance(data[field], list):
-            errors.append(f"{field} must be a list!")
+            if value is not None and (
+                not isinstance(value, int)
+                or isinstance(value, bool)
+            ):
+                errors.append(
+                    f"metadata.{field} must be an integer or null!"
+                )
 
-    if errors:
-        return print_errors(errors)
+    # Port information
+    if "found_ports" in metadata:
+        found_ports = metadata["found_ports"]
 
-    # Validate entities
+        if not isinstance(found_ports, list):
+            errors.append("metadata.found_ports must be a list!")
+        else:
+            for port in found_ports:
+                if not isinstance(port, str) or not port.strip():
+                    errors.append(
+                        "Every metadata.found_ports item "
+                        "must be a non-empty string!"
+                    )
+
+    if "contains_port_info" in metadata:
+        if not isinstance(metadata["contains_port_info"], bool):
+            errors.append(
+                "metadata.contains_port_info must be a boolean!"
+            )
+
+    # Category information
+    if "category" in metadata:
+        categories = metadata["category"]
+
+        if not isinstance(categories, list):
+            errors.append("metadata.category must be a list!")
+        else:
+            for category in categories:
+                if not isinstance(category, str) or not category.strip():
+                    errors.append(
+                        "Every metadata.category item "
+                        "must be a non-empty string!"
+                    )
+
+    # GPT-4o classification
+    if "gpt_4o_label" in metadata:
+        label = metadata["gpt_4o_label"]
+
+        if label is not None:
+            if not isinstance(label, dict):
+                errors.append(
+                    "metadata.gpt_4o_label must be an object or null!"
+                )
+            else:
+                category = label.get("category")
+                tags = label.get("specific_tags")
+
+                if category is not None and not isinstance(category, str):
+                    errors.append(
+                        "gpt_4o_label.category must be a string or null!"
+                    )
+
+                if tags is not None:
+                    if not isinstance(tags, list):
+                        errors.append(
+                            "gpt_4o_label.specific_tags must be a list!"
+                        )
+                    else:
+                        for tag in tags:
+                            if not isinstance(tag, str) or not tag.strip():
+                                errors.append(
+                                    "Every specific_tags item "
+                                    "must be a non-empty string!"
+                                )
+
+
+def validate_entities(entities, errors):
+    """Validate NLP entities."""
+
     entity_names = set()
     entity_ids = set()
     entity_types = {}
 
-    for index, entity in enumerate(data["entities"]):
+    for index, entity in enumerate(entities):
 
         if not isinstance(entity, dict):
             errors.append(f"Entity {index + 1} must be an object!")
@@ -111,11 +191,15 @@ def validate_json(file_path):
         entity_id = entity.get("id")
 
         if not isinstance(name, str) or not name.strip():
-            errors.append(f"Entity {index + 1}: invalid or missing name!")
+            errors.append(
+                f"Entity {index + 1}: invalid or missing name!"
+            )
             continue
 
         if not isinstance(entity_type, str):
-            errors.append(f"Entity {name}: missing or invalid type!")
+            errors.append(
+                f"Entity {name}: missing or invalid type!"
+            )
             continue
 
         if entity_type not in SUPPORTED_ENTITY_TYPES:
@@ -126,7 +210,9 @@ def validate_json(file_path):
 
         if entity_id is not None:
             if not isinstance(entity_id, str) or not entity_id.strip():
-                errors.append(f"Entity {name}: ID must be a non-empty string!")
+                errors.append(
+                    f"Entity {name}: ID must be a non-empty string!"
+                )
             elif entity_id in entity_ids:
                 errors.append(f"Duplicate entity ID: {entity_id}")
             else:
@@ -135,13 +221,20 @@ def validate_json(file_path):
         normalized_name = name.strip()
 
         if normalized_name in entity_names:
-            errors.append(f"Duplicate entity name: {normalized_name}")
+            errors.append(
+                f"Duplicate entity name: {normalized_name}"
+            )
         else:
             entity_names.add(normalized_name)
             entity_types[normalized_name] = entity_type
 
-    # Validate relationships
-    for index, relationship in enumerate(data["relationships"]):
+    return entity_names, entity_types
+
+
+def validate_relationships(relationships, entity_names, errors):
+    """Validate NLP relationships."""
+
+    for index, relationship in enumerate(relationships):
 
         if not isinstance(relationship, dict):
             errors.append(
@@ -186,8 +279,19 @@ def validate_json(file_path):
                 f"Unsupported relationship type: {relation}"
             )
 
-    # Validate detected risks
-    for index, risk in enumerate(data["detected_risks"]):
+        evidence = relationship.get("evidence")
+
+        if evidence is not None and not isinstance(evidence, str):
+            errors.append(
+                f"Relationship evidence must be a string: "
+                f"{name_1} -> {name_2}"
+            )
+
+
+def validate_detected_risks(detected_risks, entity_types, entity_names, errors):
+    """Validate detected risks."""
+
+    for index, risk in enumerate(detected_risks):
 
         if not isinstance(risk, dict):
             errors.append(
@@ -206,7 +310,9 @@ def validate_json(file_path):
             )
             continue
 
-        if entity_types.get(risk_name.strip()) != "RISK":
+        risk_name = risk_name.strip()
+
+        if entity_types.get(risk_name) != "RISK":
             errors.append(
                 f"'{risk_name}' is not a known RISK entity!"
             )
@@ -247,11 +353,115 @@ def validate_json(file_path):
                         f"'{affected_name}'!"
                     )
 
-    # Final result
+        evidence = risk.get("evidence")
+
+        if evidence is not None and not isinstance(evidence, str):
+            errors.append(
+                f"Risk {risk_name}: evidence must be a string!"
+            )
+
+
+def validate_json(file_path):
+    """Validate GMRID article JSON before Neo4j ingestion."""
+
+    file_path = Path(file_path)
+    errors = []
+
+    if not file_path.exists():
+        print(f"Error: JSON file not found: {file_path}")
+        return False
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            data = json.load(file)
+
+    except json.JSONDecodeError as error:
+        print(f"Invalid JSON format: {error}")
+        return False
+
+    except OSError as error:
+        print(f"Unable to read JSON file: {error}")
+        return False
+
+    print("JSON syntax is valid!")
+
+    if not isinstance(data, dict):
+        print("Error: JSON root must be an object!")
+        return False
+
+    # Required GMRID fields
+    required_fields = [
+        "record_id",
+        "source",
+        "article",
+        "metadata",
+        "entities",
+        "relationships",
+        "detected_risks",
+        "severity_note"
+    ]
+
+    for field in required_fields:
+        if field not in data:
+            errors.append(f"Missing required field: {field}")
+
     if errors:
         return print_errors(errors)
 
-    print("All required fields are present!")
+    # Validate record ID
+    record_id = data["record_id"]
+
+    if not (
+        isinstance(record_id, int)
+        and not isinstance(record_id, bool)
+    ) and not (
+        isinstance(record_id, str) and record_id.strip()
+    ):
+        errors.append("record_id must be an integer or non-empty string!")
+
+    # Validate source and article
+    for field in ["source", "article"]:
+        if not isinstance(data[field], str) or not data[field].strip():
+            errors.append(f"{field} must be a non-empty string!")
+
+    if not isinstance(data["severity_note"], str):
+        errors.append("severity_note must be a string!")
+
+    # Validate metadata
+    validate_metadata(data["metadata"], errors)
+
+    # Validate NLP arrays
+    for field in ["entities", "relationships", "detected_risks"]:
+        if not isinstance(data[field], list):
+            errors.append(f"{field} must be a list!")
+
+    if errors:
+        return print_errors(errors)
+
+    # Validate nested NLP data
+    entity_names, entity_types = validate_entities(
+        data["entities"],
+        errors
+    )
+
+    validate_relationships(
+        data["relationships"],
+        entity_names,
+        errors
+    )
+
+    validate_detected_risks(
+        data["detected_risks"],
+        entity_types,
+        entity_names,
+        errors
+    )
+
+    if errors:
+        return print_errors(errors)
+
+    print("GMRID record validation successful!")
+    print("Metadata validation successful!")
     print("Entity validation successful!")
     print("Relationship validation successful!")
     print("Detected risk validation successful!")
@@ -260,20 +470,8 @@ def validate_json(file_path):
     return True
 
 
-def print_errors(errors):
-    """Display validation errors."""
-
-    print("\nJSON validation failed!")
-
-    for error in errors:
-        print(f"- {error}")
-
-    return False
-
-
 if __name__ == "__main__":
 
-    # Accept custom JSON path or use default
     json_file = (
         Path(sys.argv[1])
         if len(sys.argv) > 1
