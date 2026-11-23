@@ -10,6 +10,7 @@ from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from src.core.exceptions import EntityNotFoundError
+from src.services.synthetic_generator import SyntheticSupplyChainGenerator
 from src.schemas.graph import (
     NodeType,
     RiskLevel,
@@ -407,3 +408,25 @@ async def simulate_disruption(payload: SimulateDisruptionRequest) -> SupplyChain
         nodes=list(_MOCK_NODES.values()),
         edges=list(_MOCK_EDGES.values())
     )
+
+
+@router.get("/synthetic", response_model=SupplyChainGraphTopology, status_code=status.HTTP_200_OK)
+async def get_synthetic_graph_topology(
+    node_count: int = Query(default=1000, ge=10, le=5000, description="Target total node count"),
+    edge_density: float = Query(default=1.8, ge=1.0, le=5.0, description="Average forward outward edges per node"),
+    seed: Optional[int] = Query(default=42, description="Random seed for reproducible graph structure"),
+) -> SupplyChainGraphTopology:
+    """Generate large-scale synthetic supply chain topology for UI rendering and stress testing."""
+    generator = SyntheticSupplyChainGenerator(seed=seed)
+    return generator.generate_topology(node_count=node_count, edge_density=edge_density)
+
+
+@router.get("/benchmark", status_code=status.HTTP_200_OK)
+async def benchmark_graph_serialization(
+    node_count: int = Query(default=1000, ge=10, le=5000, description="Node count to profile"),
+    edge_density: float = Query(default=1.8, ge=1.0, le=5.0, description="Edge density"),
+    seed: Optional[int] = Query(default=42, description="Random seed"),
+) -> Dict[str, Any]:
+    """Benchmark Pydantic model serialization speed and payload footprint for large graphs."""
+    generator = SyntheticSupplyChainGenerator(seed=seed)
+    return generator.benchmark_serialization(node_count=node_count, edge_density=edge_density)
