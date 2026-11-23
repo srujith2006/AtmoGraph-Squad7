@@ -1,0 +1,2423 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AtmoGraph Ripple Predictor",
+    "description": "AtmoGraph API: Supply Chain Ripple Effect Predictor. Predicting multi-hop delays by mapping live news disruptions onto a global supply chain graph.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Health & Diagnostics"
+        ],
+        "summary": "Get Health Status",
+        "description": "Return runtime health status and system telemetry.",
+        "operationId": "get_health_status_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ping": {
+      "get": {
+        "tags": [
+          "Health & Diagnostics"
+        ],
+        "summary": "Ping",
+        "description": "Ultra-lightweight ping probe for load balancer health checks.",
+        "operationId": "ping_health_ping_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/neo4j": {
+      "get": {
+        "tags": [
+          "Health & Diagnostics"
+        ],
+        "summary": "Check Neo4J Health",
+        "description": "Diagnostic probe for Neo4j connection pool and node availability.",
+        "operationId": "check_neo4j_health_health_neo4j_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/graph/topology": {
+      "get": {
+        "tags": [
+          "Supply Chain Graph"
+        ],
+        "summary": "Get Graph Topology",
+        "description": "Retrieve full supply chain topology formatted for both D3.js and React Flow canvas.",
+        "operationId": "get_graph_topology_api_v1_graph_topology_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplyChainGraphTopology"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/graph/nodes": {
+      "get": {
+        "tags": [
+          "Supply Chain Graph"
+        ],
+        "summary": "List Graph Nodes",
+        "description": "List supply chain nodes with optional filtering.",
+        "operationId": "list_graph_nodes_api_v1_graph_nodes_get",
+        "parameters": [
+          {
+            "name": "node_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/NodeType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by node classification",
+              "title": "Node Type"
+            },
+            "description": "Filter by node classification"
+          },
+          {
+            "name": "risk_level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/RiskLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by risk rating",
+              "title": "Risk Level"
+            },
+            "description": "Filter by risk rating"
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by country of operation",
+              "title": "Country"
+            },
+            "description": "Filter by country of operation"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/NodeStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by operational status",
+              "title": "Status"
+            },
+            "description": "Filter by operational status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplyChainNode"
+                  },
+                  "title": "Response List Graph Nodes Api V1 Graph Nodes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/graph/nodes/{node_id}": {
+      "get": {
+        "tags": [
+          "Supply Chain Graph"
+        ],
+        "summary": "Get Node By Id",
+        "description": "Retrieve detailed metadata for a single supply chain node.",
+        "operationId": "get_node_by_id_api_v1_graph_nodes__node_id__get",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplyChainNode"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/graph/edges": {
+      "get": {
+        "tags": [
+          "Supply Chain Graph"
+        ],
+        "summary": "List Graph Edges",
+        "description": "List directed shipping routes and transport edges.",
+        "operationId": "list_graph_edges_api_v1_graph_edges_get",
+        "parameters": [
+          {
+            "name": "from_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter routes departing from node ID",
+              "title": "From Id"
+            },
+            "description": "Filter routes departing from node ID"
+          },
+          {
+            "name": "to_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter routes arriving at node ID",
+              "title": "To Id"
+            },
+            "description": "Filter routes arriving at node ID"
+          },
+          {
+            "name": "active_disruption",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active disruption status",
+              "title": "Active Disruption"
+            },
+            "description": "Filter by active disruption status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ShippingRouteEdge"
+                  },
+                  "title": "Response List Graph Edges Api V1 Graph Edges Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/graph/metrics": {
+      "get": {
+        "tags": [
+          "Supply Chain Graph"
+        ],
+        "summary": "Get Graph Metrics",
+        "description": "Provide aggregated supply chain metrics for executive dashboard cards.",
+        "operationId": "get_graph_metrics_api_v1_graph_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphMetricsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/graph/simulate-disruption": {
+      "post": {
+        "tags": [
+          "Supply Chain Graph"
+        ],
+        "summary": "Simulate Disruption",
+        "description": "Simulate an upstream disruption incident and return updated graph topology.",
+        "operationId": "simulate_disruption_api_v1_graph_simulate_disruption_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulateDisruptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplyChainGraphTopology"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/graph/synthetic": {
+      "get": {
+        "tags": [
+          "Supply Chain Graph"
+        ],
+        "summary": "Get Synthetic Graph Topology",
+        "description": "Generate large-scale synthetic supply chain topology for UI rendering and stress testing.",
+        "operationId": "get_synthetic_graph_topology_api_v1_graph_synthetic_get",
+        "parameters": [
+          {
+            "name": "node_count",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 5000,
+              "minimum": 10,
+              "description": "Target total node count",
+              "default": 1000,
+              "title": "Node Count"
+            },
+            "description": "Target total node count"
+          },
+          {
+            "name": "edge_density",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 5.0,
+              "minimum": 1.0,
+              "description": "Average forward outward edges per node",
+              "default": 1.8,
+              "title": "Edge Density"
+            },
+            "description": "Average forward outward edges per node"
+          },
+          {
+            "name": "seed",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Random seed for reproducible graph structure",
+              "default": 42,
+              "title": "Seed"
+            },
+            "description": "Random seed for reproducible graph structure"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplyChainGraphTopology"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/graph/benchmark": {
+      "get": {
+        "tags": [
+          "Supply Chain Graph"
+        ],
+        "summary": "Benchmark Graph Serialization",
+        "description": "Benchmark Pydantic model serialization speed and payload footprint for large graphs.",
+        "operationId": "benchmark_graph_serialization_api_v1_graph_benchmark_get",
+        "parameters": [
+          {
+            "name": "node_count",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 5000,
+              "minimum": 10,
+              "description": "Node count to profile",
+              "default": 1000,
+              "title": "Node Count"
+            },
+            "description": "Node count to profile"
+          },
+          {
+            "name": "edge_density",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 5.0,
+              "minimum": 1.0,
+              "description": "Edge density",
+              "default": 1.8,
+              "title": "Edge Density"
+            },
+            "description": "Edge density"
+          },
+          {
+            "name": "seed",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Random seed",
+              "default": 42,
+              "title": "Seed"
+            },
+            "description": "Random seed"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Benchmark Graph Serialization Api V1 Graph Benchmark Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/nlp/ingest": {
+      "post": {
+        "tags": [
+          "NLP Ingestion Engine"
+        ],
+        "summary": "Ingest Nlp Entities",
+        "description": "Webhook endpoint receiving NLP entity extraction payloads from spaCy / HuggingFace pipelines.\n\nResolves mentioned geopolitical entities and organizations onto graph nodes,\nupdates risk states, and stores the processed alert.",
+        "operationId": "ingest_nlp_entities_api_v1_nlp_ingest_post",
+        "parameters": [
+          {
+            "name": "X-Webhook-Secret",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Webhook-Secret"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NLPIngestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NLPIngestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/nlp/alerts": {
+      "get": {
+        "tags": [
+          "NLP Ingestion Engine"
+        ],
+        "summary": "List Disruption Alerts",
+        "description": "Retrieve history of processed NLP disruption alerts.",
+        "operationId": "list_disruption_alerts_api_v1_nlp_alerts_get",
+        "parameters": [
+          {
+            "name": "severity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/DisruptionSeverity"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by disruption severity rating",
+              "title": "Severity"
+            },
+            "description": "Filter by disruption severity rating"
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter alerts affecting a specific node ID",
+              "title": "Node Id"
+            },
+            "description": "Filter alerts affecting a specific node ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NLPDisruptionAlert"
+                  },
+                  "title": "Response List Disruption Alerts Api V1 Nlp Alerts Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "NLP Ingestion Engine"
+        ],
+        "summary": "Clear Alerts For Testing",
+        "description": "Clear in-memory alert history for testing purposes.",
+        "operationId": "clear_alerts_for_testing_api_v1_nlp_alerts_delete",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/nlp/alerts/{alert_id}": {
+      "get": {
+        "tags": [
+          "NLP Ingestion Engine"
+        ],
+        "summary": "Get Disruption Alert By Id",
+        "description": "Retrieve detailed NLP disruption alert by its unique alert ID.",
+        "operationId": "get_disruption_alert_by_id_api_v1_nlp_alerts__alert_id__get",
+        "parameters": [
+          {
+            "name": "alert_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Alert Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NLPDisruptionAlert"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/predictions/ripple": {
+      "post": {
+        "tags": [
+          "GNN Ripple Predictions"
+        ],
+        "summary": "Generate Ripple Prediction",
+        "description": "Execute GNN ripple-effect inference for an epicenter node across 30, 60, and 90-day horizons.",
+        "operationId": "generate_ripple_prediction_api_v1_predictions_ripple_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RipplePredictionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GNNRipplePredictionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/predictions/latest": {
+      "get": {
+        "tags": [
+          "GNN Ripple Predictions"
+        ],
+        "summary": "Get Latest Ripple Prediction",
+        "description": "Retrieve the most recent GNN ripple forecast generated.",
+        "operationId": "get_latest_ripple_prediction_api_v1_predictions_latest_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GNNRipplePredictionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/predictions/{prediction_id}": {
+      "get": {
+        "tags": [
+          "GNN Ripple Predictions"
+        ],
+        "summary": "Get Prediction By Id",
+        "description": "Retrieve a previously calculated GNN prediction by prediction ID.",
+        "operationId": "get_prediction_by_id_api_v1_predictions__prediction_id__get",
+        "parameters": [
+          {
+            "name": "prediction_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Prediction Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GNNRipplePredictionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ws/status": {
+      "get": {
+        "tags": [
+          "Real-Time WebSocket Streaming"
+        ],
+        "summary": "Get Websocket Manager Status",
+        "description": "Retrieve operational telemetry and total active connection count.",
+        "operationId": "get_websocket_manager_status_api_v1_ws_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebSocketStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ws/broadcast": {
+      "post": {
+        "tags": [
+          "Real-Time WebSocket Streaming"
+        ],
+        "summary": "Trigger Manual Broadcast",
+        "description": "Trigger a broadcast event payload across all connected dashboard WebSocket clients.",
+        "operationId": "trigger_manual_broadcast_api_v1_ws_broadcast_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebSocketBroadcastRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/telemetry/profiler": {
+      "get": {
+        "tags": [
+          "Observability & Profiling Telemetry"
+        ],
+        "summary": "Get Profiler Summary",
+        "description": "Retrieve runtime request execution profiling, percentiles (p50, p95, p99), and latency breakdowns.",
+        "operationId": "get_profiler_summary_api_v1_telemetry_profiler_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfilerSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Observability & Profiling Telemetry"
+        ],
+        "summary": "Reset Profiler Telemetry",
+        "description": "Reset in-memory profiling metrics (used for benchmark test isolation).",
+        "operationId": "reset_profiler_telemetry_api_v1_telemetry_profiler_delete",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Reset Profiler Telemetry Api V1 Telemetry Profiler Delete"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DisruptionSeverity": {
+        "type": "string",
+        "enum": [
+          "LOW",
+          "MEDIUM",
+          "HIGH",
+          "CRITICAL"
+        ],
+        "title": "DisruptionSeverity",
+        "description": "Severity rating for NLP disruption events."
+      },
+      "EndpointMetrics": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "total_calls": {
+            "type": "integer",
+            "title": "Total Calls"
+          },
+          "error_calls": {
+            "type": "integer",
+            "title": "Error Calls"
+          },
+          "slow_calls": {
+            "type": "integer",
+            "title": "Slow Calls"
+          },
+          "latencies": {
+            "$ref": "#/components/schemas/LatencyBreakdown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "path",
+          "total_calls",
+          "error_calls",
+          "slow_calls",
+          "latencies"
+        ],
+        "title": "EndpointMetrics",
+        "description": "Detailed operational metrics for a specific HTTP method and path."
+      },
+      "GNNRipplePredictionResponse": {
+        "properties": {
+          "prediction_id": {
+            "type": "string",
+            "title": "Prediction Id",
+            "description": "Unique prediction execution ID"
+          },
+          "disruption_alert_id": {
+            "type": "string",
+            "title": "Disruption Alert Id",
+            "description": "Reference ID of originating NLP disruption alert"
+          },
+          "root_node_id": {
+            "type": "string",
+            "title": "Root Node Id",
+            "description": "Epicenter node where disruption originated"
+          },
+          "root_node_name": {
+            "type": "string",
+            "title": "Root Node Name",
+            "description": "Name of epicenter node"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At",
+            "description": "Prediction timestamp"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version",
+            "description": "PyTorch Geometric model weights version",
+            "default": "gnn-sage-v1.0.0"
+          },
+          "critical_delay_path": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Critical Delay Path",
+            "description": "Ordered sequence of node IDs representing the worst-case propagation path"
+          },
+          "predictions_by_horizon": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/HorizonPrediction"
+            },
+            "type": "object",
+            "title": "Predictions By Horizon",
+            "description": "Horizon predictions keyed by '30_day', '60_day', and '90_day'"
+          },
+          "recommendations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recommendations",
+            "description": "Actionable mitigation suggestions, e.g. rerouting or buffer activation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "prediction_id",
+          "disruption_alert_id",
+          "root_node_id",
+          "root_node_name",
+          "predictions_by_horizon"
+        ],
+        "title": "GNNRipplePredictionResponse",
+        "description": "Complete GNN prediction response containing multi-hop ripple forecasts for 30, 60, and 90 days."
+      },
+      "GraphMetricsResponse": {
+        "properties": {
+          "total_suppliers": {
+            "type": "integer",
+            "title": "Total Suppliers",
+            "description": "Count of active supplier entities"
+          },
+          "manufacturing_units": {
+            "type": "integer",
+            "title": "Manufacturing Units",
+            "description": "Count of manufacturing and assembly plants"
+          },
+          "distribution_centers": {
+            "type": "integer",
+            "title": "Distribution Centers",
+            "description": "Count of warehouses and logistics ports"
+          },
+          "retail_locations": {
+            "type": "integer",
+            "title": "Retail Locations",
+            "description": "Count of retail distribution nodes"
+          },
+          "active_disruptions": {
+            "type": "integer",
+            "title": "Active Disruptions",
+            "description": "Count of routes currently suffering active disruptions"
+          },
+          "high_risk_node_count": {
+            "type": "integer",
+            "title": "High Risk Node Count",
+            "description": "Count of nodes in High or Critical risk states"
+          },
+          "network_health_score_pct": {
+            "type": "number",
+            "title": "Network Health Score Pct",
+            "description": "Overall network operational efficiency score (0-100)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_suppliers",
+          "manufacturing_units",
+          "distribution_centers",
+          "retail_locations",
+          "active_disruptions",
+          "high_risk_node_count",
+          "network_health_score_pct"
+        ],
+        "title": "GraphMetricsResponse",
+        "description": "Summary metrics schema aligned with React dashboard KPI cards."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Overall health state",
+            "default": "healthy"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service",
+            "description": "Service identifier"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "API version"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment",
+            "description": "Runtime environment"
+          },
+          "uptime_seconds": {
+            "type": "number",
+            "title": "Uptime Seconds",
+            "description": "Uptime duration in seconds"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp",
+            "description": "ISO 8601 UTC timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "service",
+          "version",
+          "environment",
+          "uptime_seconds",
+          "timestamp"
+        ],
+        "title": "HealthResponse",
+        "description": "Schema for health status payload."
+      },
+      "HopDelayImpact": {
+        "properties": {
+          "hop_distance": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Hop Distance",
+            "description": "Topological distance from root disruption (1 = direct child)"
+          },
+          "node_id": {
+            "type": "string",
+            "title": "Node Id",
+            "description": "Impacted supply chain node ID"
+          },
+          "node_name": {
+            "type": "string",
+            "title": "Node Name",
+            "description": "Node name"
+          },
+          "node_type": {
+            "$ref": "#/components/schemas/NodeType",
+            "description": "Node type"
+          },
+          "predicted_delay_days": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Predicted Delay Days",
+            "description": "Mean predicted delay in days"
+          },
+          "delay_confidence_lower": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Delay Confidence Lower",
+            "description": "Lower bound of 95% confidence interval"
+          },
+          "delay_confidence_upper": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Delay Confidence Upper",
+            "description": "Upper bound of 95% confidence interval"
+          },
+          "propagation_probability": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Propagation Probability",
+            "description": "Likelihood of ripple impact reaching node"
+          },
+          "downstream_nodes_affected": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Downstream Nodes Affected",
+            "description": "Number of additional nodes depending on this node",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "hop_distance",
+          "node_id",
+          "node_name",
+          "node_type",
+          "predicted_delay_days",
+          "delay_confidence_lower",
+          "delay_confidence_upper",
+          "propagation_probability"
+        ],
+        "title": "HopDelayImpact",
+        "description": "Predicted delay and risk impact on a single node across graph hops."
+      },
+      "HorizonPrediction": {
+        "properties": {
+          "horizon_days": {
+            "type": "integer",
+            "title": "Horizon Days",
+            "description": "Simulated timeline window: 30, 60, or 90 days"
+          },
+          "mean_network_delay_days": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Mean Network Delay Days",
+            "description": "Average delay across all impacted nodes"
+          },
+          "max_single_node_delay_days": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Max Single Node Delay Days",
+            "description": "Maximum delay sustained by any single node"
+          },
+          "severely_impacted_node_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Severely Impacted Node Count",
+            "description": "Count of nodes suffering delays > 14 days"
+          },
+          "impacted_nodes": {
+            "items": {
+              "$ref": "#/components/schemas/HopDelayImpact"
+            },
+            "type": "array",
+            "title": "Impacted Nodes",
+            "description": "Node-by-node delay breakdown"
+          },
+          "cumulative_production_loss_pct": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Cumulative Production Loss Pct",
+            "description": "Estimated total network throughput loss %"
+          }
+        },
+        "type": "object",
+        "required": [
+          "horizon_days",
+          "mean_network_delay_days",
+          "max_single_node_delay_days",
+          "severely_impacted_node_count",
+          "cumulative_production_loss_pct"
+        ],
+        "title": "HorizonPrediction",
+        "description": "Aggregated GNN ripple effect prediction for a specific temporal window (30/60/90 days)."
+      },
+      "LatencyBreakdown": {
+        "properties": {
+          "p50_ms": {
+            "type": "number",
+            "title": "P50 Ms",
+            "description": "50th percentile latency (median)"
+          },
+          "p95_ms": {
+            "type": "number",
+            "title": "P95 Ms",
+            "description": "95th percentile latency"
+          },
+          "p99_ms": {
+            "type": "number",
+            "title": "P99 Ms",
+            "description": "99th percentile latency"
+          },
+          "min_ms": {
+            "type": "number",
+            "title": "Min Ms",
+            "description": "Minimum execution duration recorded"
+          },
+          "max_ms": {
+            "type": "number",
+            "title": "Max Ms",
+            "description": "Maximum execution duration recorded"
+          },
+          "avg_ms": {
+            "type": "number",
+            "title": "Avg Ms",
+            "description": "Arithmetic mean execution duration"
+          }
+        },
+        "type": "object",
+        "required": [
+          "p50_ms",
+          "p95_ms",
+          "p99_ms",
+          "min_ms",
+          "max_ms",
+          "avg_ms"
+        ],
+        "title": "LatencyBreakdown",
+        "description": "Percentile latency metrics for an endpoint route."
+      },
+      "MatchedNodeImpact": {
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "title": "Node Id"
+          },
+          "node_name": {
+            "type": "string",
+            "title": "Node Name"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country"
+          },
+          "matched_entity": {
+            "type": "string",
+            "title": "Matched Entity"
+          },
+          "previous_risk_level": {
+            "type": "string",
+            "title": "Previous Risk Level"
+          },
+          "new_risk_level": {
+            "type": "string",
+            "title": "New Risk Level"
+          },
+          "disruption_applied": {
+            "type": "boolean",
+            "title": "Disruption Applied"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "node_name",
+          "country",
+          "matched_entity",
+          "previous_risk_level",
+          "new_risk_level",
+          "disruption_applied"
+        ],
+        "title": "MatchedNodeImpact",
+        "description": "Graph node linked to an extracted entity from the news text."
+      },
+      "NLPDetectedRisk": {
+        "properties": {
+          "risk": {
+            "type": "string",
+            "title": "Risk",
+            "description": "Risk taxonomy description, e.g. 'Port congestion', 'Factory strike'"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location",
+            "description": "Geographic location of event"
+          },
+          "affected_entities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Affected Entities",
+            "description": "Target companies, facilities, or commodities"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/DisruptionSeverity",
+            "description": "Assessed severity level",
+            "default": "MEDIUM"
+          },
+          "evidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence",
+            "description": "Sentence text proving the risk"
+          }
+        },
+        "type": "object",
+        "required": [
+          "risk"
+        ],
+        "title": "NLPDetectedRisk",
+        "description": "Domain risk event classified by NLP model."
+      },
+      "NLPDisruptionAlert": {
+        "properties": {
+          "alert_id": {
+            "type": "string",
+            "title": "Alert Id",
+            "description": "Unique alert UUID"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Disruption headline or title"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Originating publication, e.g. 'Reuters', 'AIS Port Feed'"
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Published At",
+            "description": "Publication timestamp"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/DisruptionSeverity",
+            "description": "Disruption severity rating",
+            "default": "MEDIUM"
+          },
+          "primary_risk": {
+            "type": "string",
+            "title": "Primary Risk",
+            "description": "Identified primary risk type, e.g. 'Port Strike', 'Canal Congestion'"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location",
+            "description": "Geographic location affected"
+          },
+          "affected_node_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Affected Node Ids",
+            "description": "IDs of graph nodes directly impacted"
+          },
+          "entities": {
+            "items": {
+              "$ref": "#/components/schemas/NLPExtractedEntity"
+            },
+            "type": "array",
+            "title": "Entities",
+            "description": "Named entities identified in article"
+          },
+          "evidence_text": {
+            "type": "string",
+            "title": "Evidence Text",
+            "description": "Snippet or article excerpt supporting this disruption"
+          },
+          "confidence_score": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence Score",
+            "description": "Overall NLP extraction confidence",
+            "default": 0.88
+          }
+        },
+        "type": "object",
+        "required": [
+          "alert_id",
+          "title",
+          "source",
+          "primary_risk",
+          "evidence_text"
+        ],
+        "title": "NLPDisruptionAlert",
+        "description": "Structured disruption alert generated by NLP ingestion engine from news streams."
+      },
+      "NLPExtractedEntity": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Entity identifier, e.g. E1"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Entity textual mention, e.g. 'Singapore Port'"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "Entity type: GPE, ORG, RISK, SHIPMENT, FACILITY"
+          },
+          "start_char": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Char",
+            "description": "Starting character offset in source text"
+          },
+          "end_char": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Char",
+            "description": "Ending character offset in source text"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "Model confidence score (0-1)",
+            "default": 1.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type"
+        ],
+        "title": "NLPExtractedEntity",
+        "description": "Named Entity extracted by spaCy / HuggingFace from live news text."
+      },
+      "NLPIngestRequest": {
+        "properties": {
+          "article": {
+            "type": "string",
+            "title": "Article",
+            "description": "Raw news article text or breaking report excerpt"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "Article headline",
+            "default": "Live Breaking News Disruption"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "News origin or crawler ID",
+            "default": "spaCy/HuggingFace NER Pipeline"
+          },
+          "entities": {
+            "items": {
+              "$ref": "#/components/schemas/NLPExtractedEntity"
+            },
+            "type": "array",
+            "title": "Entities",
+            "description": "Named entities identified in text"
+          },
+          "relationships": {
+            "items": {
+              "$ref": "#/components/schemas/NLPRelationship"
+            },
+            "type": "array",
+            "title": "Relationships",
+            "description": "Extracted entity relationships"
+          },
+          "detected_risks": {
+            "items": {
+              "$ref": "#/components/schemas/NLPDetectedRisk"
+            },
+            "type": "array",
+            "title": "Detected Risks",
+            "description": "Categorized supply chain risks"
+          },
+          "severity_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Severity Note",
+            "description": "Model explanation for severity classification"
+          },
+          "confidence_score": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence Score",
+            "description": "Overall NLP confidence (0-1)",
+            "default": 0.9
+          }
+        },
+        "type": "object",
+        "required": [
+          "article"
+        ],
+        "title": "NLPIngestRequest",
+        "description": "Payload sent by spaCy / HuggingFace worker to the ingestion webhook."
+      },
+      "NLPIngestResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Processing status",
+            "default": "ingested"
+          },
+          "alert_id": {
+            "type": "string",
+            "title": "Alert Id",
+            "description": "Created disruption alert UUID"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Alert headline"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity",
+            "description": "Applied severity level"
+          },
+          "entities_count": {
+            "type": "integer",
+            "title": "Entities Count",
+            "description": "Total named entities received"
+          },
+          "matched_nodes_count": {
+            "type": "integer",
+            "title": "Matched Nodes Count",
+            "description": "Count of supply chain graph nodes impacted"
+          },
+          "matched_nodes": {
+            "items": {
+              "$ref": "#/components/schemas/MatchedNodeImpact"
+            },
+            "type": "array",
+            "title": "Matched Nodes",
+            "description": "Linked graph nodes details"
+          },
+          "ingested_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ingested At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "alert_id",
+          "title",
+          "severity",
+          "entities_count",
+          "matched_nodes_count"
+        ],
+        "title": "NLPIngestResponse",
+        "description": "Response returned by webhook upon successful ingestion and entity linking."
+      },
+      "NLPRelationship": {
+        "properties": {
+          "entity_1": {
+            "type": "string",
+            "title": "Entity 1",
+            "description": "First entity mention"
+          },
+          "entity_2": {
+            "type": "string",
+            "title": "Entity 2",
+            "description": "Second entity mention"
+          },
+          "relation": {
+            "type": "string",
+            "title": "Relation",
+            "description": "Relation predicate: e.g. LOCATED_IN, CAUSES, AFFECTED_BY, EXPERIENCING"
+          },
+          "evidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence",
+            "description": "Supporting sentence excerpt"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_1",
+          "entity_2",
+          "relation"
+        ],
+        "title": "NLPRelationship",
+        "description": "Semantic relation between two extracted entities in breaking news text."
+      },
+      "NodeStatus": {
+        "type": "string",
+        "enum": [
+          "Active",
+          "Degraded",
+          "Disrupted",
+          "Offline"
+        ],
+        "title": "NodeStatus",
+        "description": "Operational status of a supply chain entity."
+      },
+      "NodeType": {
+        "type": "string",
+        "enum": [
+          "supplier",
+          "manufacturer",
+          "port",
+          "warehouse",
+          "retailer"
+        ],
+        "title": "NodeType",
+        "description": "Core supply chain node classifications."
+      },
+      "ProfilerSummaryResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "operational"
+          },
+          "total_requests_profiled": {
+            "type": "integer",
+            "title": "Total Requests Profiled"
+          },
+          "slow_request_threshold_ms": {
+            "type": "number",
+            "title": "Slow Request Threshold Ms"
+          },
+          "total_slow_requests": {
+            "type": "integer",
+            "title": "Total Slow Requests"
+          },
+          "uptime_since": {
+            "type": "string",
+            "title": "Uptime Since"
+          },
+          "endpoints": {
+            "items": {
+              "$ref": "#/components/schemas/EndpointMetrics"
+            },
+            "type": "array",
+            "title": "Endpoints"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_requests_profiled",
+          "slow_request_threshold_ms",
+          "total_slow_requests",
+          "uptime_since",
+          "endpoints"
+        ],
+        "title": "ProfilerSummaryResponse",
+        "description": "Aggregated profiler telemetry payload."
+      },
+      "ReactFlowEdge": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "animated": {
+            "type": "boolean",
+            "title": "Animated",
+            "default": true
+          },
+          "style": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Style"
+          },
+          "markerEnd": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Markerend"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "target"
+        ],
+        "title": "ReactFlowEdge",
+        "description": "React Flow native edge specification."
+      },
+      "ReactFlowNode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "default": "supplyChainNode"
+          },
+          "position": {
+            "$ref": "#/components/schemas/ReactFlowPosition"
+          },
+          "data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "position",
+          "data"
+        ],
+        "title": "ReactFlowNode",
+        "description": "React Flow native node specification."
+      },
+      "ReactFlowPosition": {
+        "properties": {
+          "x": {
+            "type": "number",
+            "title": "X"
+          },
+          "y": {
+            "type": "number",
+            "title": "Y"
+          }
+        },
+        "type": "object",
+        "required": [
+          "x",
+          "y"
+        ],
+        "title": "ReactFlowPosition",
+        "description": "2D coordinates on the React Flow / D3 canvas."
+      },
+      "RelationshipType": {
+        "type": "string",
+        "enum": [
+          "SUPPLIES_TO",
+          "SHIPS_TO",
+          "TRANSPORTS_TO",
+          "DISTRIBUTES_TO"
+        ],
+        "title": "RelationshipType",
+        "description": "Graph edge relationship types between nodes."
+      },
+      "RipplePredictionRequest": {
+        "properties": {
+          "root_node_id": {
+            "type": "string",
+            "title": "Root Node Id",
+            "description": "Epicenter node ID to simulate, e.g. 'node-4' or 'node-6'"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/DisruptionSeverity",
+            "description": "Incident severity level",
+            "default": "HIGH"
+          },
+          "alert_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alert Id",
+            "description": "Optional triggering NLP disruption alert ID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "root_node_id"
+        ],
+        "title": "RipplePredictionRequest",
+        "description": "Payload to initiate a GNN multi-hop delay ripple forecast."
+      },
+      "RiskLevel": {
+        "type": "string",
+        "enum": [
+          "Low",
+          "Medium",
+          "High",
+          "Critical"
+        ],
+        "title": "RiskLevel",
+        "description": "Normalized risk classification levels."
+      },
+      "ShippingRouteEdge": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique edge identifier, e.g. e-S001-F001"
+          },
+          "from_id": {
+            "type": "string",
+            "title": "From Id",
+            "description": "Origin node ID"
+          },
+          "to_id": {
+            "type": "string",
+            "title": "To Id",
+            "description": "Destination node ID"
+          },
+          "type": {
+            "$ref": "#/components/schemas/RelationshipType",
+            "description": "Graph relationship type",
+            "default": "SUPPLIES_TO"
+          },
+          "transport_mode": {
+            "$ref": "#/components/schemas/TransportMode",
+            "description": "Transit modality",
+            "default": "Ocean Freight"
+          },
+          "lead_time_days": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Lead Time Days",
+            "description": "Transit or delivery time in days",
+            "default": 7.0
+          },
+          "capacity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capacity",
+            "description": "Volume capacity (e.g. units or TEUs)"
+          },
+          "risk_multiplier": {
+            "type": "number",
+            "maximum": 10.0,
+            "minimum": 0.1,
+            "title": "Risk Multiplier",
+            "description": "Risk propagation coefficient",
+            "default": 1.0
+          },
+          "active_disruption": {
+            "type": "boolean",
+            "title": "Active Disruption",
+            "description": "True if this route currently experiences delays",
+            "default": false
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Operational notes or route restrictions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "from_id",
+          "to_id"
+        ],
+        "title": "ShippingRouteEdge",
+        "description": "Directed connection representing logistics transit or material supply between nodes."
+      },
+      "SimulateDisruptionRequest": {
+        "properties": {
+          "target_node_id": {
+            "type": "string",
+            "title": "Target Node Id",
+            "description": "Node to disrupt, e.g. 'node-4'"
+          },
+          "new_risk_level": {
+            "$ref": "#/components/schemas/RiskLevel",
+            "description": "Target node risk level",
+            "default": "High"
+          },
+          "disruption_description": {
+            "type": "string",
+            "title": "Disruption Description",
+            "description": "Description of incident, e.g. 'Port congestion in Singapore'"
+          },
+          "delay_added_days": {
+            "type": "number",
+            "minimum": 1.0,
+            "title": "Delay Added Days",
+            "description": "Transit delay to inject on connected routes",
+            "default": 12.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "target_node_id",
+          "disruption_description"
+        ],
+        "title": "SimulateDisruptionRequest",
+        "description": "Payload to trigger an interactive disruption simulation."
+      },
+      "SupplyChainGraphTopology": {
+        "properties": {
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/SupplyChainNode"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/ShippingRouteEdge"
+            },
+            "type": "array",
+            "title": "Edges"
+          },
+          "total_nodes": {
+            "type": "integer",
+            "title": "Total Nodes",
+            "default": 0
+          },
+          "total_edges": {
+            "type": "integer",
+            "title": "Total Edges",
+            "default": 0
+          },
+          "react_flow_nodes": {
+            "items": {
+              "$ref": "#/components/schemas/ReactFlowNode"
+            },
+            "type": "array",
+            "title": "React Flow Nodes"
+          },
+          "react_flow_edges": {
+            "items": {
+              "$ref": "#/components/schemas/ReactFlowEdge"
+            },
+            "type": "array",
+            "title": "React Flow Edges"
+          },
+          "last_synced_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Synced At"
+          }
+        },
+        "type": "object",
+        "title": "SupplyChainGraphTopology",
+        "description": "Full supply chain graph envelope matching backend Neo4j data and React Flow canvas requirements."
+      },
+      "SupplyChainNode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique node identifier, e.g. S001, F001, P001"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Entity or facility legal name"
+          },
+          "node_type": {
+            "$ref": "#/components/schemas/NodeType",
+            "description": "Node category",
+            "default": "supplier"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country",
+            "description": "ISO country name or code"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location",
+            "description": "City, region, or port location"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier",
+            "description": "Supplier tier or facility classification",
+            "default": "Tier 1"
+          },
+          "status": {
+            "$ref": "#/components/schemas/NodeStatus",
+            "description": "Current operational state",
+            "default": "Active"
+          },
+          "risk_level": {
+            "$ref": "#/components/schemas/RiskLevel",
+            "description": "Assessed disruption risk rating",
+            "default": "Low"
+          },
+          "capacity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capacity",
+            "description": "Current operational capacity percentage",
+            "default": "90%"
+          },
+          "lead_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Time",
+            "description": "Estimated outbound dispatch lead time",
+            "default": "14 days"
+          },
+          "transit_method": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TransportMode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Primary outbound transport",
+            "default": "Ocean Freight"
+          },
+          "key_output": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key Output",
+            "description": "Primary produced or handled commodity"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 90.0,
+                "minimum": -90.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude",
+            "description": "Geographic latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 180.0,
+                "minimum": -180.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude",
+            "description": "Geographic longitude"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata",
+            "description": "Arbitrary domain properties"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "country"
+        ],
+        "title": "SupplyChainNode",
+        "description": "Generic supply chain graph node representing suppliers, factories, ports, etc."
+      },
+      "TransportMode": {
+        "type": "string",
+        "enum": [
+          "Ocean Freight",
+          "Air Freight",
+          "Rail",
+          "Road Trucking",
+          "Multimodal"
+        ],
+        "title": "TransportMode",
+        "description": "Logistics transit method for supply chain routes."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WebSocketBroadcastRequest": {
+        "properties": {
+          "event_type": {
+            "type": "string",
+            "title": "Event Type",
+            "description": "Event classification name",
+            "default": "system_notification"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload",
+            "description": "Event data dictionary"
+          }
+        },
+        "type": "object",
+        "title": "WebSocketBroadcastRequest",
+        "description": "Payload to trigger a manual WebSocket broadcast."
+      },
+      "WebSocketStatusResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Manager operational status",
+            "default": "active"
+          },
+          "active_connections": {
+            "type": "integer",
+            "title": "Active Connections",
+            "description": "Currently connected client sessions"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp",
+            "description": "ISO 8601 UTC timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "active_connections",
+          "timestamp"
+        ],
+        "title": "WebSocketStatusResponse",
+        "description": "Telemetry response for WebSocket connection manager."
+      }
+    }
+  }
+}

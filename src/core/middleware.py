@@ -13,6 +13,7 @@ from starlette.responses import Response
 
 from src.core.logging import get_logger, request_id_ctx
 from src.core.config import get_settings
+from src.core.profiler import get_request_profiler
 
 logger = get_logger("atmograph.middleware.access")
 
@@ -54,6 +55,14 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             response: Response = await call_next(request)
             duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
+            # Record telemetry in profiler
+            get_request_profiler().record(
+                method=method,
+                path=path,
+                duration_ms=duration_ms,
+                status_code=response.status_code
+            )
+
             # Inject tracking headers into response
             response.headers[self.header_name] = request_id
             response.headers["X-Process-Time-Ms"] = str(duration_ms)
@@ -74,6 +83,12 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 
         except Exception as exc:
             duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
+            get_request_profiler().record(
+                method=method,
+                path=path,
+                duration_ms=duration_ms,
+                status_code=500
+            )
             logger.error(
                 f"Unhandled exception during {method} {path}: {str(exc)}",
                 exc_info=True,
