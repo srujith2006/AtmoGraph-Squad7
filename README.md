@@ -37,6 +37,7 @@ AtmoGraph-Team7/
 │   │   ├── mock_supply_chain.json
 │   │   └── articles/
 │   │       ├── sample_article.json
+│   │       ├── sample_article_old.json
 │   │       ├── test_no_ids.json
 │   │       └── team_output.json
 │   │
@@ -84,32 +85,63 @@ Created a mock supply-chain dataset in JSON format and implemented Python script
 
 ---
 
-## 5. Week 2 – NLP Output Integration and Backend Processing
+## 5. Week 2 – GMRID JSON Integration and Backend Processing
 
-### 5.1 Dynamic JSON Input
+### 5.1 Understanding the GMRID Dataset
 
-Implemented article ingestion that accepts JSON files through command-line arguments instead of relying on a fixed input file.
+- Studied the GMRID dataset structure and its article records.
+- Identified the required fields for backend processing.
+- Prepared a JSON structure containing article information, metadata, entities, relationships, and detected risks.
+- Updated `sample_article.json` to follow the new GMRID format.
+- Preserved the previous sample JSON as `sample_article_old.json` for reference.
 
-Example:
+The backend currently accepts the new GMRID JSON structure.
 
-```powershell
-python backend/database/article_ingest.py backend/data/articles/sample_article.json
-```
+### 5.2 GMRID JSON Structure
 
-### 5.2 JSON Validation
+The input JSON contains the following major fields:
 
-Developed `json_validator.py` to validate incoming NLP JSON data before database ingestion.
+| Field | Description |
+|---|---|
+| `record_id` | Unique article record identifier |
+| `source` | Original dataset source |
+| `article` | Complete article text |
+| `metadata` | Dataset information and classification |
+| `entities` | Extracted entities |
+| `relationships` | Relationships between entities |
+| `detected_risks` | Identified supply-chain risks |
+| `severity_note` | Explanation of severity mapping |
+
+The metadata can contain:
+
+- Date and region
+- Latitude and longitude
+- Found ports
+- Port information availability
+- Year, month, and week
+- Original category
+- Summarized label
+- GPT-generated classification and specific tags
+- Source severity
+
+Optional metadata values can be `null`, and entity, relationship, and risk arrays can be empty.
+
+### 5.3 JSON Validation
+
+Updated `json_validator.py` to validate the new GMRID JSON format before database ingestion.
 
 Validation includes:
 
 - JSON syntax verification.
-- Required field verification.
-- Entity type validation.
+- Required top-level field verification.
+- Metadata structure and data-type validation.
+- Entity type and ID validation.
 - Duplicate entity ID and name checks.
 - Relationship type validation.
 - Entity reference verification.
+- Detected risk validation.
 - Risk severity validation.
-- Detected risk and affected entity validation.
+- Location and affected entity reference checks.
 
 Supported entity types:
 
@@ -127,67 +159,84 @@ Supported relationship types:
 - `AFFECTED_BY`
 - `EXPERIENCING`
 
-Supported severity levels:
+Supported risk severity levels:
 
 - `LOW`
 - `MEDIUM`
 - `HIGH`
 
-### 5.3 Automatic Entity ID Generation
+### 5.4 Automatic Entity ID Generation
 
-Implemented automatic ID generation for entities that do not contain an ID in the incoming JSON.
+Implemented entity ID preparation in `article_ingest.py`.
 
-- Existing IDs are preserved.
-- Missing IDs are generated using deterministic UUID generation.
-- Generated IDs use the `AUTO_` prefix.
-- Entity names and types are used to generate consistent IDs.
+- Existing entity IDs are preserved.
+- Missing entity IDs are generated automatically.
+- Deterministic UUID generation is used based on entity type and name.
+- This allows the backend to process entities even when the input does not provide IDs.
 
-This allows the backend to process JSON data even when the NLP output does not provide entity IDs.
+### 5.5 Neo4j Article Ingestion
 
-### 5.4 Neo4j Article Ingestion
-
-Implemented `article_ingest.py` to process NLP-generated JSON data.
+Updated `article_ingest.py` to process GMRID article records and store the extracted information in Neo4j AuraDB.
 
 The ingestion process:
 
-1. Loads the JSON article.
-2. Validates the input.
+1. Loads the GMRID JSON file.
+2. Validates the input structure.
 3. Prepares entity IDs.
-4. Creates or updates entity nodes.
-5. Creates relationships between entities.
-6. Updates detected risk information.
-7. Connects risks to locations and affected entities.
+4. Creates or updates the Article node.
+5. Stores article metadata.
+6. Creates or updates Port nodes.
+7. Creates entity nodes.
+8. Connects articles to their entities.
+9. Creates relationships between extracted entities.
+10. Updates detected risk information.
+11. Connects risks to locations and affected entities when provided.
 
-### 5.5 Transaction Safety
+### 5.6 Metadata Storage
+
+Implemented article metadata storage in Neo4j.
+
+- Stores the complete metadata as a JSON string.
+- Stores important metadata fields separately for easier querying.
+- Preserves source severity independently from detected risk severity.
+- Handles optional metadata values, including `null` values.
+
+### 5.7 Transaction-Based Ingestion
 
 Implemented Neo4j managed transactions using `session.execute_write()`.
 
-This ensures that all database operations for an article are treated as a single transaction.
+This ensures that the database operations for an article are executed within a managed transaction.
 
-- Successful ingestion commits all changes.
-- If an operation fails, the transaction is rolled back.
-- Prevents partially ingested article data.
+- Successful ingestion commits the changes.
+- Failed operations can trigger transaction rollback.
+- Helps prevent partially ingested article records.
 
-### 5.6 Duplicate Handling
+### 5.8 GMRID Article Testing
 
-Used Cypher `MERGE` operations to avoid unnecessary duplicate nodes and relationships during repeated ingestion.
+Tested the updated backend using the GMRID sample article.
 
-Verified node and relationship counts after repeated ingestion.
+Test record:
 
-### 5.7 NLP Team Output Integration
+- Record ID: `3390`
+- Source: `GMRID_v3-test.csv`
+- Region: India
+- Port information: Chennai
+- Detected risk: Port congestion
+- Risk severity: HIGH
 
-Successfully tested the backend using the JSON output received from the NLP development team.
+Successful terminal output confirmed:
 
-The test included:
+- JSON syntax validation.
+- GMRID record validation.
+- Metadata validation.
+- Entity validation.
+- Relationship validation.
+- Detected risk validation.
+- Article creation in Neo4j.
+- Port and entity connections.
+- Risk-to-location relationship creation.
 
-- Singapore as a geographical entity.
-- Port congestion and shipment delay as risks.
-- Semiconductor shipments as a shipment entity.
-- Samsung and Intel as organizations.
-- Relationships between the extracted entities.
-- Risk severity and affected entity information.
-
-**Integration Result:** JSON validation and Neo4j article ingestion completed successfully using the team's static sample dataset.
+**Week 2 Result:** Successfully validated and ingested a GMRID article record into Neo4j AuraDB.
 
 ---
 
@@ -197,30 +246,34 @@ The test included:
 |---|---|
 | Neo4j AuraDB connection | Completed |
 | Supply-chain graph creation | Completed |
-| Mock data ingestion | Completed |
-| Dynamic JSON file input | Completed |
-| JSON validation | Completed |
-| Automatic entity ID generation | Completed |
-| Entity and relationship ingestion | Completed |
-| Risk information ingestion | Completed |
-| Duplicate handling | Tested |
-| Transaction safety | Tested |
-| Rollback verification | Passed |
-| NLP team JSON integration | Tested with static dataset |
+| Mock supply-chain data ingestion | Completed |
+| GMRID JSON input support | Completed |
+| JSON syntax validation | Completed |
+| Metadata validation | Completed |
+| Entity validation | Completed |
+| Relationship validation | Completed |
+| Risk validation | Completed |
+| Automatic entity ID generation | Implemented |
+| Article node ingestion | Tested |
+| Port and entity ingestion | Tested |
+| Risk information ingestion | Tested |
+| Article-to-entity connections | Tested |
+| Transaction-based ingestion | Implemented |
+| GMRID sample article integration | Tested |
 | Dynamic NLP output integration | Pending |
-| Multi-article ID management | Pending |
+| Multi-article ingestion testing | Pending |
 
 ---
 
 ## 7. Running the Backend
 
-### Step 1: Install dependencies
+### Step 1: Install Dependencies
 
 ```powershell
 pip install neo4j python-dotenv certifi
 ```
 
-### Step 2: Configure environment variables
+### Step 2: Configure Environment Variables
 
 Create a `.env` file in the project root using `.env.example` as a reference.
 
@@ -234,7 +287,7 @@ NEO4J_PASSWORD=your_neo4j_password
 
 Do not commit the `.env` file to GitHub.
 
-### Step 3: Configure SSL certificate path
+### Step 3: Configure SSL Certificate Path
 
 For PowerShell:
 
@@ -242,42 +295,44 @@ For PowerShell:
 $env:SSL_CERT_FILE = python -c "import certifi; print(certifi.where())"
 ```
 
-### Step 4: Validate an article JSON file
+### Step 4: Validate an Article JSON File
 
 ```powershell
 python backend/utils/json_validator.py backend/data/articles/sample_article.json
 ```
 
-### Step 5: Ingest an article into Neo4j
+### Step 5: Ingest an Article into Neo4j
 
 ```powershell
 python backend/database/article_ingest.py backend/data/articles/sample_article.json
 ```
 
-You can replace the JSON file path with another article JSON file.
+You can replace the JSON file path with another GMRID-compatible article JSON file.
 
 ---
 
 ## 8. Current Development Status
 
-Week 1 graph database foundations have been completed.
+Week 1 graph database foundations have been completed, including Neo4j AuraDB setup, supply-chain graph design, and automated mock data ingestion.
 
-Week 2 backend processing features have been implemented and tested, including JSON validation, automatic entity ID generation, article ingestion, transaction safety, and integration with the NLP team's current static JSON output.
+Week 2 focused on GMRID JSON integration and backend article processing. The JSON validator and article ingestion scripts have been updated to support the new input format. A sample article was successfully validated and ingested into Neo4j AuraDB.
 
-The next development phase focuses on integrating dynamically generated NLP outputs, establishing a reliable entity ID strategy across multiple articles, and supporting multi-article ingestion.
+The next development phase focuses on integrating dynamically generated NLP outputs, improving entity identification across multiple articles, and supporting prediction-related data in the graph.
 
 ---
 
 ## 9. Future Improvements
 
 - Integrate dynamically generated NLP output.
-- Establish a collision-safe entity ID strategy across articles.
+- Establish a consistent entity identification strategy across articles.
 - Support ingestion of multiple news articles.
-- Maintain article-level traceability for extracted entities and risks.
+- Improve article-level traceability for extracted entities and risks.
+- Integrate prediction results into the Neo4j graph.
 - Support backend APIs for frontend integration.
 - Improve graph-based supply-chain risk analysis.
 
 ---
 
-**AtmoGraph – Backend Development**  
+**AtmoGraph – Backend Development**
+
 *Python | Neo4j AuraDB | Cypher | JSON*
