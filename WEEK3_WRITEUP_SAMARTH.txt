@@ -1,0 +1,195 @@
+================================================================================
+ATMOGRAPH: SUPPLY CHAIN RIPPLE EFFECT PREDICTOR (SQUAD 7)
+WEEK 3 TECHNICAL WRITE-UP & IMPLEMENTATION BLUEPRINT (DAYS 15 - 21)
+================================================================================
+Author: Samarth P. Maske
+Role: Senior QA Automation, API Integration & DevOps Architect
+Target Branch: Samarth---ITD
+Focus Scope: Security Hardening, API Authentication, Performance Caching & Data Operations
+Current Status: Pre-Implementation / Execution Blueprint
+================================================================================
+
+1. EXECUTIVE OVERVIEW & ARCHITECTURAL SCOPE
+--------------------------------------------------------------------------------
+Week 3 (spanning Days 15 through 21 in the Master Engineering Roadmap) represents
+the transition of the AtmoGraph platform from core containerized orchestration into
+an enterprise-hardened, production-ready system. 
+
+As the Senior QA Automation, API Integration & DevOps Architect, my exclusive focus
+for Week 3 centers on three critical architectural pillars:
+  1. API Security & Access Governance (Days 15 - 18):
+     Eliminating unauthenticated endpoints, implementing cryptographic JWT tokens,
+     securing webhook partner access via scoped API keys, preventing DDoS abuse 
+     with in-memory sliding-window rate limiters, conducting automated Bandit SAST
+     vulnerability scans, and strictly whitelisting CORS/TLS communication.
+  2. Query Latency & Cache Acceleration (Days 19 - 20):
+     Introducing a dual-tier LRU / Redis asynchronous caching adapter for heavy
+     subgraph queries, indexing Neo4j Cypher properties to achieve sub-15ms graph
+     lookups, and establishing connection pool leak detection harnesses.
+  3. Enterprise Data Export & GIS Interoperability (Day 21):
+     Building high-throughput, memory-efficient streaming export endpoints for
+     GeoJSON spatial networks, tabular CSV datasets, and executive summary reports.
+
+All planned implementations adhere strictly to the project engineering policies:
+  * 100% automated test pass rate with zero skipped tests and zero build failures.
+  * Explicit commit messages strictly exceeding 51+ characters.
+  * Backward compatibility with existing FastAPI, Neo4j, and React Flow layers.
+
+
+2. DAY-BY-DAY TECHNICAL IMPLEMENTATION BREAKDOWN (DAYS 15 - 21)
+--------------------------------------------------------------------------------
+
+[DAY 15] JWT & API KEY DUAL-TIER AUTHENTICATION ENGINE
+--------------------------------------------------------------------------------
+* Scope: Secure REST and WebSocket endpoints using OAuth2 password flow, JWT 
+  bearer tokens, and dedicated X-API-Key headers for automated data ingestion.
+* Planned Commit Message (>51 chars):
+  feat(auth): implement jwt token and api key authentication middleware for protected routes
+* Target Deliverables:
+  - src/core/auth.py: Cryptographic JWT token generation, verification, and decoding
+    using HS256/RS256 algorithms with configurable expiration windows.
+  - src/core/security.py: Dependency injection providers for FastAPI (get_current_user,
+    require_admin, verify_ingest_api_key) and PBKDF2/Bcrypt password hashing.
+  - tests/test_auth.py: Automated unit and integration tests verifying token issuance,
+    tampered token rejection (401 Unauthorized), expired token handling, and valid 
+    API key authentication for /api/v1/nlp/webhook.
+* Key Architecture Decisions:
+  Public endpoints (/health, /docs, /openapi.json) remain accessible without 
+  credentials. Sensitive graph manipulation, ripple simulation, and webhook
+  ingestion routes will require valid credentials via HTTP Bearer or X-API-Key.
+
+[DAY 16] SLIDING-WINDOW IN-MEMORY RATE LIMITING MIDDLEWARE
+--------------------------------------------------------------------------------
+* Scope: Protect backend compute resources and the GNN ripple inference engine from
+  traffic spikes, brute-force attacks, and API abuse.
+* Planned Commit Message (>51 chars):
+  feat(ratelimit): add in-memory sliding window rate limiting middleware to prevent api abuse
+* Target Deliverables:
+  - src/core/ratelimit.py: Pure ASGI middleware tracking client requests in a 60-second
+    sliding timestamp queue keyed by client IP or authenticated API key.
+  - tests/test_ratelimit.py: High-frequency concurrent test requests asserting HTTP 429
+    Too Many Requests when thresholds (e.g., 60 req/min for general routes, 10 req/min
+    for heavy GNN simulations) are exceeded, verifying Retry-After, X-RateLimit-Limit,
+    and X-RateLimit-Remaining headers.
+* Key Architecture Decisions:
+  Utilizes thread-safe deque data structures with automated timestamp eviction to 
+  ensure zero memory leaks while adding less than 0.5ms overhead to incoming requests.
+
+[DAY 17] AUTOMATED SECURITY VULNERABILITY SCANNER & INPUT SANITIZATION
+--------------------------------------------------------------------------------
+* Scope: Automated Static Application Security Testing (SAST) and comprehensive
+  sanitization of incoming NLP disruption text and Cypher query strings.
+* Planned Commit Message (>51 chars):
+  sec(deps): add automated bandit security vulnerability audit and input sanitization check
+* Target Deliverables:
+  - .bandit.yaml: Configuration profile for Bandit SAST scanning, asserting zero high
+    or medium severity security vulnerabilities across all src/ modules.
+  - scripts/run_security_audit.py: Automated CLI script executing Bandit, checking
+    dependency advisories (pip-audit), and verifying input sanitization routines.
+  - src/utils/sanitizer.py: XSS/injection cleansing filters stripping script tags,
+    malformed unicode characters, and unsafe control sequences from NLP articles.
+* Key Architecture Decisions:
+  Integrate security assertions directly into the local test validation harness so
+  any newly introduced security flaw halts the build immediately.
+
+[DAY 18] CORS WHITELIST HARDENING & TLS/HTTPS ENCRYPTION SPECIFICATIONS
+--------------------------------------------------------------------------------
+* Scope: Eliminate insecure wildcard CORS policies and configure production TLS/SSL
+  reverse proxy parameters.
+* Planned Commit Message (>51 chars):
+  sec(cors): harden cors origin whitelist and configure https tls termination settings
+* Target Deliverables:
+  - src/core/config.py: Environment-driven CORS regex parser validating trusted origin
+    domains, disallowing wildcard origins with credentials, and enforcing strict 
+    Allowed Headers and Methods.
+  - nginx/ssl.conf: Nginx TLS termination template enforcing TLSv1.2 and TLSv1.3,
+    HSTS (HTTP Strict Transport Security), secure DH parameters, and OCSP stapling.
+  - tests/test_cors.py: Pytest suite testing Origin headers, Preflight (OPTIONS)
+    responses, and rejection of untrusted third-party origins.
+* Key Architecture Decisions:
+  Restrict cross-origin API access exclusively to registered dashboard origins,
+  preventing cross-site request forgery and unauthorized data exfiltration.
+
+[DAY 19] HIGH-PERFORMANCE DUAL-TIER LRU & REDIS CACHING ADAPTER
+--------------------------------------------------------------------------------
+* Scope: Accelerate graph topology reads and GNN ripple simulation lookups by caching
+  computationally heavy graph traversal results.
+* Planned Commit Message (>51 chars):
+  feat(cache): integrate in-memory lru and redis caching adapter for topology queries
+* Target Deliverables:
+  - src/services/cache.py: Asynchronous cache provider supporting dual backends:
+    in-memory TTLCache (LRU) as default, with transparent fallback to Redis when configured.
+  - Cache Invalidation Protocol: Automatic cache eviction hooks triggered upon new
+    node creation, edge updates, or disruption event ingestions.
+  - tests/test_cache.py: Tests asserting cache hit latency reductions (<2ms on cache hit
+    vs >45ms on cold graph traversal) and verifying automatic invalidation on updates.
+* Key Architecture Decisions:
+  Cache keys are deterministic sha256 hashes of query parameters and disruption states,
+  preventing stale impact calculations from propagating to the frontend.
+
+[DAY 20] NEO4J CYPHER INDEX OPTIMIZATION & CONNECTION LEAK DETECTION
+--------------------------------------------------------------------------------
+* Scope: Tune graph database query performance and implement diagnostic leak detection
+  to prevent database connection starvation under heavy concurrency.
+* Planned Commit Message (>51 chars):
+  perf(db): optimize neo4j cypher index constraints and connection leak detection suite
+* Target Deliverables:
+  - scripts/init_neo4j_indexes.cypher: Production Cypher script establishing unique
+    constraints on :SupplyChainNode(id), :Disruption(id), and index lookups on
+    node types, echelons, country codes, and risk severity scores.
+  - src/core/neo4j.py: Enhanced connection pool manager with active lease tracking,
+    context-managed acquisition, and automatic warning telemetry for lingering leases.
+  - tests/test_neo4j_perf.py: Stress test simulating 50 concurrent transactions to verify
+    zero connection exhaustion and sub-10ms query execution with indexes active.
+* Key Architecture Decisions:
+  Indexes reduce multi-hop ripple traversal lookups from full node scans O(N) to
+  btree index index-seeks O(log N), sustaining real-time performance at 10,000+ nodes.
+
+[DAY 21] ENTERPRISE GEOJSON, CSV & EXCEL DATA EXPORT ENGINE
+--------------------------------------------------------------------------------
+* Scope: Build streaming bulk export endpoints enabling supply chain analysts and
+  risk managers to download network topologies and simulation reports.
+* Planned Commit Message (>51 chars):
+  feat(export): add bulk export endpoints for geojson, csv, and excel supply chain reports
+* Target Deliverables:
+  - src/api/routes/export.py: Asynchronous export endpoints:
+      * GET /api/v1/export/geojson -> FeatureCollection of supply chain nodes and routes.
+      * GET /api/v1/export/csv -> Flattened tabular view of nodes, tiers, and risk levels.
+      * GET /api/v1/export/disruptions -> Historical disruption log and GNN ripple impact logs.
+  - Streaming Response Generator: Memory-safe chunked streaming utilizing Python
+    generators, preventing OOM crashes on large graph exports.
+  - tests/test_export.py: Comprehensive validation asserting RFC 7946 GeoJSON schema
+    compliance, CSV header alignments, and HTTP content-disposition headers.
+* Key Architecture Decisions:
+  Direct generator streaming allows exporting large datasets without buffering the entire
+  payload in memory, keeping backend memory usage flat under load.
+
+
+3. QUALITY ASSURANCE GATES & PERFORMANCE BENCHMARKS
+--------------------------------------------------------------------------------
+During Week 3, I will enforce the following engineering standards:
+  1. Test Suite Expansion:
+     - Increase the automated test suite from 86 tests to 105+ tests.
+     - Maintain 100% test pass rate with 0 skipped and 0 failing tests.
+  2. Latency Targets:
+     - Cache Hit Responses: < 5ms (p95).
+     - Authenticated REST Ingestion: < 35ms (p95).
+     - Full Topology Cached Graph Read: < 15ms (p95).
+  3. Security Verification:
+     - 0 High/Medium Bandit vulnerabilities.
+     - 100% rejection of unauthenticated/tampered tokens.
+     - Strict rate limiting active on all public interfaces.
+  4. Docker Compose Parity:
+     - Full compatibility with the multi-service stack (Neo4j, Backend, Frontend)
+       orchestrated in Day 12.
+
+
+4. EXECUTION SUMMARY
+--------------------------------------------------------------------------------
+Week 3 focuses on transforming AtmoGraph into an enterprise-grade platform through
+security, caching, and data operations. Each day from Day 15 to 21 will be implemented,
+verified against automated tests, and committed with descriptive 51+ character
+commit messages to the Samarth---ITD branch.
+================================================================================
+END OF WRITE-UP
+================================================================================
