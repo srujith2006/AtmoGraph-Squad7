@@ -108,7 +108,7 @@ def test_cross_team_sample_article_json_compatibility(client: TestClient):
     assert response.status_code == 201
     data = response.json()
     assert data["status"] == "ingested"
-    assert "node-4" in [m["node_id"] for m in data["matched_nodes"]]
+    assert "node-10" in [m["node_id"] for m in data["matched_nodes"]]
 
 
 @pytest.mark.integration

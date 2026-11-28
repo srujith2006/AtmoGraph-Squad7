@@ -1,0 +1,58 @@
+{
+  "record_id": 3390,
+  "source": "GMRID_v3-test.csv",
+
+  "article": "Port congestion in Chennai has delayed shipments.",
+
+  "metadata": {
+    "date": "2020-06-23 13:49:00",
+    "region": "India",
+    "latitude": null,
+    "longitude": null,
+    "found_ports": ["chennai"],
+    "contains_port_info": true,
+    "year": 2020,
+    "month": 6,
+    "category": ["Port Congestion"],
+    "summarized_label": "Administrative Issue",
+    "gpt_4o_label": {
+      "category": "Administrative Issue",
+      "specific_tags": ["Port Congestion"]
+    },
+    "source_severity": "Severe"
+  },
+
+  "entities": [
+    {
+      "id": "E1",
+      "name": "Chennai",
+      "type": "GPE"
+    },
+    {
+      "id": "E2",
+      "name": "Port congestion",
+      "type": "RISK"
+    }
+  ],
+
+  "relationships": [
+    {
+      "entity_1": "Port congestion",
+      "entity_2": "Chennai",
+      "relation": "LOCATED_IN",
+      "evidence": "Port congestion in Chennai has delayed shipments."
+    }
+  ],
+
+  "detected_risks": [
+    {
+      "risk": "Port congestion",
+      "location": "Chennai",
+      "affected_entities": [],
+      "severity": "HIGH",
+      "evidence": "Port congestion in Chennai has delayed shipments."
+    }
+  ],
+
+  "severity_note": "Source severity Severe mapped to HIGH."
+}

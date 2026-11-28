@@ -1,16 +1,14 @@
 
-"""Load mock supply-chain records and merge them into the Neo4j graph."""
-
 import json
 from pathlib import Path
 
-from connection import driver  # Shared Neo4j driver configured from environment variables.
+from connection import driver
 
-# Resolve the repository root so this script works regardless of the current directory.
+# Locate the JSON file from the project root
 ROOT_DIR = Path(__file__).resolve().parents[2]
 DATA_FILE = ROOT_DIR / "backend" / "data" / "mock_supply_chain.json"
 
-# Connect each top-level JSON collection to its corresponding Neo4j node label.
+# Map JSON sections to Neo4j node labels
 NODE_LABELS = {
     "suppliers": "Supplier",
     "factories": "Factory",
@@ -19,7 +17,7 @@ NODE_LABELS = {
     "retailers": "Retailer"
 }
 
-# Whitelist relationship types and their required source/target node labels.
+# Allow only the relationship types defined in our graph model
 RELATIONSHIPS = {
     "SUPPLIES_TO": ("Supplier", "Factory"),
     "SHIPS_TO": ("Factory", "Port"),
@@ -29,19 +27,18 @@ RELATIONSHIPS = {
 
 
 def load_json():
-    """Read and parse the mock supply-chain dataset from disk."""
+    """Read supply-chain data from the JSON file."""
     with open(DATA_FILE, "r", encoding="utf-8") as file:
         return json.load(file)
 
 
 def ingest_data(tx, data):
-    """Merge all dataset nodes and relationships inside the caller transaction."""
+    """Insert or update nodes and relationships in Neo4j."""
 
-    # Merge nodes by ID so rerunning ingestion updates records instead of duplicating them.
+    # Step 1: Create or match nodes
     for section, label in NODE_LABELS.items():
 
         for record in data[section]:
-            # Labels come from the fixed NODE_LABELS map; values are passed as parameters.
             query = f"""
             MERGE (n:{label} {{id: $id}})
             SET n += $properties
@@ -55,12 +52,11 @@ def ingest_data(tx, data):
 
             print(f"Processed {label}: {record['id']}")
 
-    # Merge edges by endpoints and type, then apply their non-key properties.
+    # Step 2: Create or match relationships
     for relationship in data["relationships"]:
 
         rel_type = relationship["type"]
 
-        # Reject unknown types before constructing a Cypher query.
         if rel_type not in RELATIONSHIPS:
             raise ValueError(f"Unsupported relationship: {rel_type}")
 
@@ -73,7 +69,6 @@ def ingest_data(tx, data):
         SET r += $properties
         """
 
-        # Keep relationship metadata separate from the endpoint and type identifiers.
         properties = {
             key: value
             for key, value in relationship.items()
@@ -97,11 +92,9 @@ def ingest_data(tx, data):
 
 
 def main():
-    """Load the dataset, run one write transaction, and always close the driver."""
     try:
         data = load_json()
 
-        # The transaction helper commits on success and rolls back if ingestion raises.
         with driver.session() as session:
             session.execute_write(ingest_data, data)
 

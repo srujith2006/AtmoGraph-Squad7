@@ -1,25 +1,39 @@
 
-"""Configure the Neo4j driver and provide a small connectivity check."""
-
 import os
 from neo4j import GraphDatabase
 from dotenv import load_dotenv
 
-# Load database credentials from the repository-root .env file into the process environment.
-load_dotenv()
+# Find the project root directory
+PROJECT_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..")
+)
 
+# Load credentials from the project root .env file
+load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
+
+# Read Neo4j credentials
 URI = os.getenv("NEO4J_URI")
 USERNAME = os.getenv("NEO4J_USERNAME")
 PASSWORD = os.getenv("NEO4J_PASSWORD")
 
-# Create the shared driver used by the database scripts.
+# Validate configuration
+if not URI or not USERNAME or not PASSWORD:
+    raise RuntimeError(
+        "Neo4j configuration is incomplete. "
+        "Check NEO4J_URI, NEO4J_USERNAME, and NEO4J_PASSWORD "
+        "in your project .env file."
+    )
+
+# Create Neo4j driver
 driver = GraphDatabase.driver(
     URI,
     auth=(USERNAME, PASSWORD)
 )
 
+
 def test_connection():
-    """Verify the Neo4j connection and print the current node count."""
+    """Test Neo4j AuraDB connectivity and retrieve node count."""
+
     try:
         # Verify database connectivity
         driver.verify_connectivity()
@@ -33,16 +47,20 @@ def test_connection():
                 RETURN count(n) AS total_nodes
             """)
 
-            count = result.single()["total_nodes"]
+            record = result.single()
 
-            print("Total nodes in database:", count)
+            if record is not None:
+                count = record["total_nodes"]
+                print("Total nodes in database:", count)
+            else:
+                print("No result returned from Neo4j.")
 
     except Exception as error:
         print("Connection failed:", error)
 
-    finally:
-        driver.close()
-
 
 if __name__ == "__main__":
-    test_connection()
+    try:
+        test_connection()
+    finally:
+        driver.close()
